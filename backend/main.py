@@ -77,19 +77,50 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({'role': 'system', 'content': client_id, 'type': 'client_id'})
         while True:
             data = await websocket.receive_json()
-            if data.get('type') == 'text' and 'content' in data:
-                 user_message = {'role': 'user', 'content': data['content'], 'type': 'text', 'timestamp': datetime.now().isoformat()}
-                 if client_id not in client_message_history: client_message_history[client_id] = []
+            if 'content' in data and data.get('type') in ['text', 'image']:
+                 message_type = data.get('type')
+                 
+                 # Create user message based on type
+                 if message_type == 'text':
+                     user_message = {'role': 'user', 'content': data['content'], 'type': 'text', 'timestamp': datetime.now().isoformat()}
+                 else:  # image type
+                     user_message = {
+                         'role': 'user', 
+                         'content': data['content'], 
+                         'type': 'image', 
+                         'timestamp': datetime.now().isoformat()
+                     }
+                     # Add caption if provided
+                     if 'caption' in data:
+                         user_message['caption'] = data['caption']
+                 
+                 # Initialize message history if needed
+                 if client_id not in client_message_history: 
+                     client_message_history[client_id] = []
+                 
+                 # Add message to history
                  client_message_history[client_id].append(user_message)
-                 # await websocket.send_json({'role': 'system', 'content': 'typing', 'type': 'indicator'}) # Optional typing indicator
+                 
+                 # Optional typing indicator
+                 # await websocket.send_json({'role': 'system', 'content': 'typing', 'type': 'indicator'})
+                 
+                 # Get model ID
                  default_model = config["models"]["default"]
-                 model_id = data.get('model_id', default_model) # Model from client or default from config
-                 print(f"Using model: {model_id} for {client_id}")
-                 response = await execute_openai_call(model_id, client_message_history[client_id], data['content'])
+                 model_id = data.get('model_id', default_model)  # Model from client or default from config
+                 print(f"Using model: {model_id} for {client_id} with message type: {message_type}")
+                 
+                 # Process with API
+                 if message_type == 'text':
+                     response = await execute_openai_call(model_id, client_message_history[client_id], data['content'])
+                 else:  # image type
+                     response = await execute_openai_call(model_id, client_message_history[client_id], data)
+                 
+                 # Add timestamp and send response
                  response['timestamp'] = datetime.now().isoformat()
                  client_message_history[client_id].append(response)
                  await websocket.send_json(response)
-            # Ignore other types silently
+            else:
+                 print(f"Ignoring message with invalid type or missing content: {data.get('type')}")
     except WebSocketDisconnect: print(f"WS disconnected: {client_id}")
     except Exception as e: print(f"WS error for {client_id}: {str(e)}")
     finally: # Cleanup

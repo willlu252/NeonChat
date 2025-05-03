@@ -143,6 +143,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let editingProjectIndex = null;
     let projects = [];
     
+    // Function to handle pasted image data
+    function handlePastedImage(pasteEvent) {
+        const items = (pasteEvent.clipboardData || pasteEvent.originalEvent.clipboardData).items;
+        
+        for (const item of items) {
+            if (item.type.indexOf('image') === 0) {
+                // We found an image in the clipboard
+                const blob = item.getAsFile();
+                currentImage = blob;
+                
+                // Create a preview of the pasted image
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    previewImage.src = event.target.result;
+                    imagePreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(blob);
+                
+                // Prevent the default paste behavior
+                pasteEvent.preventDefault();
+                break;
+            }
+        }
+    }
+    
     // Load projects from localStorage
     try {
         const savedProjects = localStorage.getItem('tron_projects');
@@ -421,6 +446,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chatInput && chatInput.tagName.toLowerCase() === 'textarea') {
         chatInput.addEventListener('input', autoResizeInput, false);
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); } });
+        // Add paste event listener for clipboard images
+        chatInput.addEventListener('paste', handlePastedImage);
     }
     if (sendButton) { sendButton.addEventListener('click', () => { window.sendMessage(); }); }
     
