@@ -80,7 +80,19 @@ function typewriterEffect(element, text, speed = 5) {
     
     type();
 }
-function autoResizeInput() { if (!this || typeof this.scrollHeight === 'undefined') return; this.style.height = 'auto'; const newHeight = this.scrollHeight; const minHeight = 40; this.style.height = Math.max(minHeight, newHeight) + 'px'; }
+function autoResizeInput() { 
+    if (!this || typeof this.scrollHeight === 'undefined') return; 
+    this.style.height = 'auto'; 
+    const newHeight = this.scrollHeight; 
+    const minHeight = 40; 
+    const maxHeight = 150; // Match the CSS max-height value
+    
+    // Set the height within min and max constraints
+    this.style.height = Math.min(Math.max(minHeight, newHeight), maxHeight) + 'px';
+    
+    // Enable or disable scrolling based on content height
+    this.style.overflowY = newHeight > maxHeight ? 'auto' : 'hidden';
+}
 window.showTypingIndicator = () => { const el = document.querySelector('.typing-indicator'); if (el) el.classList.remove('hidden'); /* + scroll */ };
 window.hideTypingIndicator = () => { const el = document.querySelector('.typing-indicator'); if (el) el.classList.add('hidden'); };
 // --- END Global Helper Functions ---

@@ -14,7 +14,9 @@
 body {
   background-color: var(--dark-bg);
   font-family: 'Orbitron', 'Rajdhani', var(--code-font);
-  color: var(--tron-white); position: relative; overflow-x: hidden;
+  color: var(--tron-white); position: relative; overflow: hidden;
+  margin: 0; padding: 0; /* Remove default margins and padding */
+  height: 100vh; /* Set body to full viewport height */
 }
 body::before { /* Grid */
   content: ''; position: fixed; inset: 0;
@@ -63,10 +65,12 @@ body::before { /* Grid */
 .nav-link:hover { border-color: var(--neon-pink) !important; box-shadow: 0 0 12px var(--neon-pink); background-color: rgba(255, 0, 255, 0.1) !important; }
 .nav-link.active { background-color: rgba(0, 240, 255, 0.2) !important; border-color: var(--neon-blue) !important; box-shadow: 0 0 15px var(--neon-blue); }
 
-/* Main Content Area (Original Layout - scrolls) */
+/* Main Content Area (Fixed height, no scrolling, full width) */
 .main-content-revert {
   transition: margin-left 0.3s ease; margin-left: 256px; /* Pushed by sidebar */
-  padding: 1rem; box-sizing: border-box; height: 100vh; overflow-y: auto; /* This scrolls */
+  padding: 1rem; box-sizing: border-box; height: 100vh; overflow-y: hidden; /* Prevent vertical scrolling */
+  display: flex; flex-direction: column; /* Ensure proper flex layout */
+  width: calc(100% - 256px); /* Full width minus sidebar */
 }
 /* Adjust margin when sidebar closed */
 /* Using ~ requires sidebar and main content to share the same parent */
@@ -74,12 +78,17 @@ body::before { /* Grid */
 
 /* Container for view content */
 .view-container-revert {
-    max-width: 900px; margin-left: auto; margin-right: auto;
-    display: flex; flex-direction: column; min-height: 100%; /* Fill parent height */
+    width: 100%; max-width: 1200px; margin-left: auto; margin-right: auto;
+    display: flex; flex-direction: column; height: 100%; /* Fill parent height exactly */
+    overflow: hidden; /* Prevent scrolling at this level */
 }
 
 /* Chat View Specific Layout */
-.chat-view-wrapper-revert { display: flex; flex-direction: column; flex-grow: 1; }
+.chat-view-wrapper-revert { 
+    display: flex; flex-direction: column; flex-grow: 1; 
+    height: 100%; /* Fill parent height */
+    overflow: hidden; /* Prevent scrolling at this level */
+}
 
 /* Chat Canvas Styling */
 .chat-canvas-revert {
@@ -88,6 +97,7 @@ body::before { /* Grid */
   position: relative; animation: border-flow 8s linear infinite;
   box-sizing: border-box; z-index: 10; width: 100%; margin-bottom: 0.5rem;
   flex-grow: 1; overflow-y: auto; min-height: 200px; /* Min height */
+  max-height: calc(100vh - 180px); /* Limit max height to prevent overflow */
   display: flex; flex-direction: column; /* For message container */
 }
 #chat-messages { /* Message container */
@@ -124,7 +134,7 @@ body::before { /* Grid */
 
 /* Chat HUD */
 .chat-hud-revert {
-  position: relative; width: 100%; max-width: 900px; margin: 0; z-index: 30;
+  position: relative; width: 100%; max-width: 1200px; margin: 0; z-index: 30;
   flex-shrink: 0; box-sizing: border-box; padding-top: 0.5rem;
 }
 .chat-hud-container { background-color: rgba(5, 5, 8, 0.85); border: 2px solid var(--neon-blue); border-radius: 8px; padding: 1rem; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); position: relative; overflow: hidden; }
@@ -142,15 +152,15 @@ body::before { /* Grid */
 /* Input Area within HUD */
 .input-area { display: flex; align-items: flex-end; gap: 0.5rem; }
 
-/* Chat Input Textarea (Reverted: Grows infinitely) */
+/* Chat Input Textarea (With max height and scrolling) */
 .chat-input {
   flex: 1; background-color: rgba(0, 0, 0, 0.3); color: var(--tron-white);
   border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 4px; padding: 0.75rem;
   font-family: var(--readable-font); resize: none;
   min-height: calc(0.75rem * 2 + 1.6em); line-height: 1.6;
+  max-height: 150px; /* Limit maximum height */
   transition: height 0.1s ease-out;
-  overflow-y: hidden; /* Hide scrollbar during resize */
-  /* NO max-height here */
+  overflow-y: auto; /* Enable scrolling when content exceeds max-height */
 }
 .chat-input::placeholder { color: rgba(248, 248, 255, 0.5); }
 .chat-input:focus { outline: none; border-color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
@@ -493,7 +503,11 @@ input[type="file"] { display: none; }
 @media (max-width: 768px) {
   .sidebar { width: 80%; }
   /* Adjust main content margin based on collapsed state on mobile */
-  .main-content-revert { margin-left: 0 !important; padding: 0.5rem; }
+  .main-content-revert { 
+    margin-left: 0 !important; 
+    padding: 0.5rem; 
+    width: 100% !important; /* Full width on mobile */
+  }
   .sidebar ~ .main-content-revert { margin-left: 0 !important; } /* Override default margin */
 
   .view-container-revert { max-width: 100%; }
@@ -501,4 +515,9 @@ input[type="file"] { display: none; }
   #chat-messages { padding: 0.75rem; }
   .chat-hud-revert { padding-top: 0.25rem; }
   .message { max-width: 95%; }
+}
+
+/* Sidebar collapsed state */
+.sidebar.collapsed ~ .main-content-revert {
+  width: 100%; /* Full width when sidebar is collapsed */
 }
