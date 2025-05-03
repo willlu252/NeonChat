@@ -43,29 +43,49 @@ async def execute_openai_call(model_id: str, message_history: List[Dict[str, Any
                         image_content.append({"type": "text", "text": msg["caption"]})
                     
                     formatted_messages.append({"role": "user", "content": image_content})
+        # Handle file messages (non-image attachments)
+        elif msg.get("type") == "file" and msg["role"] == "user":
+            # For non-image files, we'll create a text message with file information
+            file_info = f"File attached: {msg.get('filename', 'unnamed_file')} ({(msg.get('filesize', 0) / 1024):.1f} KB, type: {msg.get('filetype', 'unknown')})"
+            
+            # Add caption if available
+            if msg.get("caption"):
+                file_info += f"\n\nMessage: {msg['caption']}"
+                
+            formatted_messages.append({"role": "user", "content": file_info})
     
     # Add the current user input
     if isinstance(user_input, str):
         # Text input
         formatted_messages.append({"role": "user", "content": user_input})
-    elif isinstance(user_input, dict) and user_input.get("type") == "image":
-        # Image input
-        image_data = user_input.get("content", "")
-        if isinstance(image_data, str) and image_data.startswith('data:'):
-            image_content = [
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": image_data
+    elif isinstance(user_input, dict):
+        if user_input.get("type") == "image":
+            # Image input
+            image_data = user_input.get("content", "")
+            if isinstance(image_data, str) and image_data.startswith('data:'):
+                image_content = [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": image_data
+                        }
                     }
-                }
-            ]
+                ]
+                
+                # Add caption if available
+                if user_input.get("caption"):
+                    image_content.append({"type": "text", "text": user_input["caption"]})
+                    
+                formatted_messages.append({"role": "user", "content": image_content})
+        elif user_input.get("type") == "file":
+            # File input (non-image)
+            file_info = f"File attached: {user_input.get('filename', 'unnamed_file')} ({(user_input.get('filesize', 0) / 1024):.1f} KB, type: {user_input.get('filetype', 'unknown')})"
             
             # Add caption if available
             if user_input.get("caption"):
-                image_content.append({"type": "text", "text": user_input["caption"]})
+                file_info += f"\n\nMessage: {user_input['caption']}"
                 
-            formatted_messages.append({"role": "user", "content": image_content})
+            formatted_messages.append({"role": "user", "content": file_info})
 
     try:
         client = openai.AsyncOpenAI(api_key=openai_api_key)

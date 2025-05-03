@@ -77,17 +77,30 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({'role': 'system', 'content': client_id, 'type': 'client_id'})
         while True:
             data = await websocket.receive_json()
-            if 'content' in data and data.get('type') in ['text', 'image']:
+            if 'content' in data and data.get('type') in ['text', 'image', 'file']:
                  message_type = data.get('type')
                  
                  # Create user message based on type
                  if message_type == 'text':
                      user_message = {'role': 'user', 'content': data['content'], 'type': 'text', 'timestamp': datetime.now().isoformat()}
-                 else:  # image type
+                 elif message_type == 'image':  # image type
                      user_message = {
                          'role': 'user', 
                          'content': data['content'], 
                          'type': 'image', 
+                         'timestamp': datetime.now().isoformat()
+                     }
+                     # Add caption if provided
+                     if 'caption' in data:
+                         user_message['caption'] = data['caption']
+                 elif message_type == 'file':  # file type (non-image)
+                     user_message = {
+                         'role': 'user',
+                         'content': data['content'],
+                         'type': 'file',
+                         'filename': data.get('filename', 'unnamed_file'),
+                         'filetype': data.get('filetype', 'unknown'),
+                         'filesize': data.get('filesize', 0),
                          'timestamp': datetime.now().isoformat()
                      }
                      # Add caption if provided
@@ -112,7 +125,7 @@ async def websocket_endpoint(websocket: WebSocket):
                  # Process with API
                  if message_type == 'text':
                      response = await execute_openai_call(model_id, client_message_history[client_id], data['content'])
-                 else:  # image type
+                 else:  # image or file type
                      response = await execute_openai_call(model_id, client_message_history[client_id], data)
                  
                  # Add timestamp and send response
