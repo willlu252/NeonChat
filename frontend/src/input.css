@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.chat-container {
+    @apply ml-64 w-[calc(100%-16rem)] p-4;
+}
+
+.chat-box {
+    @apply bg-gray-800 border-2 border-neon-blue rounded-lg shadow-neon-blue/20;
+    min-height: calc(100vh - 8rem);
+}
+
+.image-preview {
+    @apply bg-gray-800 border border-neon-blue rounded-lg;
+}
+
+.image-preview img {
+    @apply max-w-full max-h-32 object-contain;
+}
+
+/* TRON-specific styles */
+@layer components {
+    .neon-glow {
+        @apply shadow-lg shadow-neon-blue/20;
+        animation: pulse 2s infinite;
+    }
+    
+    .neon-btn {
+        @apply bg-neon-blue hover:bg-neon-pink text-gray-900 font-bold px-4 py-2 rounded-lg transition-colors;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 0 5px theme('colors.neon-blue'), 0 0 10px theme('colors.neon-blue');
+        }
+        50% {
+            box-shadow: 0 0 10px theme('colors.neon-blue'), 0 0 20px theme('colors.neon-blue');
+        }
+    }
+    
+    .chat-hud {
+        @apply fixed bottom-4 left-1/2 transform -translate-x-1/2 w-3/4 max-w-2xl;
+    }
+    
+    .file-attach-btn {
+        @apply cursor-pointer text-neon-blue hover:text-neon-pink transition-colors p-2;
+    }
+}

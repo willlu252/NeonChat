@@ -1,0 +1,124 @@
+<div class="sidebar bg-gray-800 text-neon-blue w-64 h-screen fixed left-0 top-0 p-4 overflow-y-auto">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header mb-6">
+        <h1 class="text-xl font-bold neon-text">AI Chat</h1>
+        <div class="border-b border-neon-blue my-2"></div>
+    </div>
+
+    <!-- Model Selection Section -->
+    <div class="model-selection mb-6">
+        <h2 class="text-lg font-semibold mb-2">Model Selection</h2>
+        
+        <!-- Provider Dropdown -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Select Provider:</label>
+            <select 
+                x-data="{ providers: ['OpenAI', 'Anthropic', 'Google'] }"
+                x-model="selectedProvider"
+                class="w-full bg-gray-700 border-neon-blue text-white rounded p-2"
+                @change="updateModels()"
+            >
+                <template x-for="provider in providers" :key="provider">
+                    <option x-text="provider" :value="provider"></option>
+                </template>
+            </select>
+        </div>
+
+        <!-- Model Dropdown -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Select AI Model:</label>
+            <select 
+                x-data="{}"
+                x-model="selectedModel"
+                class="w-full bg-gray-700 border-neon-blue text-white rounded p-2"
+            >
+                <template x-for="model in filteredModels" :key="model.name">
+                    <option x-text="model.name + ' ' + model.icons" :value="model.id"></option>
+                </template>
+            </select>
+        </div>
+
+        <div class="border-b border-neon-blue my-2"></div>
+    </div>
+
+    <!-- Navigation Section -->
+    <div class="navigation">
+        <h2 class="text-lg font-semibold mb-2">Navigation</h2>
+        <div class="space-y-2">
+            <a href="/chat" class="nav-link w-full bg-gray-700 hover:bg-gray-600 text-white p-2 rounded flex items-center">
+                <span class="mr-2">💬</span> Chat
+            </a>
+            <a href="/settings" class="nav-link w-full bg-gray-700 hover:bg-gray-600 text-white p-2 rounded flex items-center">
+                <span class="mr-2">⚙️</span> Settings
+            </a>
+            <a href="/projects" class="nav-link w-full bg-gray-700 hover:bg-gray-600 text-white p-2 rounded flex items-center">
+                <span class="mr-2">📁</span> Projects
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('sidebar', () => ({
+        init() {
+            this.loadModels();
+        },
+        selectedProvider: 'OpenAI',
+        selectedModel: '',
+        filteredModels: [],
+        modelOptions: {},
+        isLoading: true,
+        
+        async loadModels() {
+            try {
+                const response = await fetch('/api/models');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                this.modelOptions = await response.json();
+                this.updateModels();
+            } catch (error) {
+                console.error('Failed to load models:', error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        
+        updateModels() {
+            this.filteredModels = Object.entries(this.modelOptions)
+                .filter(([name, model]) => model.provider === this.selectedProvider)
+                .map(([name, model]) => ({
+                    id: model.id,
+                    name: name,
+                    icons: this.getModelIcons(model)
+                }));
+            
+            if (this.filteredModels.length > 0) {
+                this.selectedModel = this.filteredModels[0].id;
+            }
+        },
+        
+        getModelIcons(model) {
+            const icons = [];
+            if (model.vision) icons.push('👀');
+            if (model.video) icons.push('📹');
+            if (model.audio_gen) icons.push('🎵');
+            if (model.image_gen) icons.push('🖼️');
+            return icons.join('');
+        }
+    }));
+});
+
+// Initialize component
+document.addEventListener('DOMContentLoaded', () => {
+    Alpine.start();
+});
+
+// Handle navigation
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const route = e.target.getAttribute('data-route');
+        window.location.href = `/${route}`;
+    });
+});
+</script>
