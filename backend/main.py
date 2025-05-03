@@ -77,7 +77,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({'role': 'system', 'content': client_id, 'type': 'client_id'})
         while True:
             data = await websocket.receive_json()
-            if 'content' in data and data.get('type') in ['text', 'image', 'file']:
+            if data.get('type') in ['text', 'image', 'file']:
                  message_type = data.get('type')
                  
                  # Create user message based on type
