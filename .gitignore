@@ -55,7 +55,7 @@ cover/
 
 # Environments
 .env
-# .env.example - temporarily allowing this file to be committed
+.env.example
 .venv
 env/
 venv/
