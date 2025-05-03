@@ -514,17 +514,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Send message function
     window.sendMessage = () => {
         const localChatInput = document.getElementById('chat-input');
-        if (!localChatInput || !window.chatSocket || window.chatSocket.readyState !== WebSocket.OPEN) return;
+        if (!localChatInput || !window.chatSocket || window.chatSocket.readyState !== WebSocket.OPEN) {
+            console.error("app.js: Cannot send message - chat input or WebSocket not available");
+            return;
+        }
         
         const text = localChatInput.value.trim();
         
         // If no text and no image, don't send
         if (!text && !currentImage) return;
         
+        // Show typing indicator while processing
+        window.showTypingIndicator();
+        
         // Default model
         let modelId = 'gpt-4o-mini';
         
         if (currentImage) {
+            console.log("app.js: Sending image message with" + (text ? " caption" : "out caption"));
             // Handle image message
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -542,7 +549,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.displayMessage(imageMessage, false);
                 
                 // Send to server
-                window.chatSocket.send(JSON.stringify(imageMessage));
+                try {
+                    window.chatSocket.send(JSON.stringify(imageMessage));
+                    console.log("app.js: Image message sent to server");
+                } catch (e) {
+                    console.error("app.js: Error sending image message:", e);
+                    window.hideTypingIndicator();
+                }
                 
                 // Clear input
                 localChatInput.value = '';
@@ -553,10 +566,19 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             reader.readAsDataURL(currentImage);
         } else {
+            console.log("app.js: Sending text message");
             // Regular text message
             const userMessage = { type: 'text', role: 'user', content: text, timestamp: new Date().toISOString() };
             const messageToSend = { ...userMessage, model_id: modelId, provider: "OpenAI" };
-            window.chatSocket.send(JSON.stringify(messageToSend));
+            
+            try {
+                window.chatSocket.send(JSON.stringify(messageToSend));
+                console.log("app.js: Text message sent to server");
+            } catch (e) {
+                console.error("app.js: Error sending text message:", e);
+                window.hideTypingIndicator();
+            }
+            
             window.displayMessage(userMessage, false);
             
             // Save user message to history
