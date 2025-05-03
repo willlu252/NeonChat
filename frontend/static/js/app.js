@@ -457,6 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = e.target.files[0];
             if (!file) return;
             
+            console.log("app.js: File selected:", file.name, file.type, file.size);
+            
             // Check if file is an image
             if (!file.type.startsWith('image/')) {
                 alert('Please select an image file.');
@@ -471,6 +473,11 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = (event) => {
                 previewImage.src = event.target.result;
                 imagePreview.classList.remove('hidden');
+                console.log("app.js: Image preview loaded");
+            };
+            reader.onerror = (error) => {
+                console.error("app.js: Error reading file:", error);
+                alert('Error loading image preview. Please try again.');
             };
             reader.readAsDataURL(file);
         });
