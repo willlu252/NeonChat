@@ -4,6 +4,7 @@ import openai
 import base64
 from typing import Dict, List, Any, Optional, Union
 from config_utils import get_api_key
+from file_utils import process_file_content
 
 async def execute_openai_call(model_id: str, message_history: List[Dict[str, Any]], user_input: Union[str, Dict[str, Any]]):
     """ Executes API call to OpenAI using server-side API key """
@@ -45,12 +46,22 @@ async def execute_openai_call(model_id: str, message_history: List[Dict[str, Any
                     formatted_messages.append({"role": "user", "content": image_content})
         # Handle file messages (non-image attachments)
         elif msg.get("type") == "file" and msg["role"] == "user":
-            # For non-image files, we'll create a text message with file information
-            file_info = f"File attached: {msg.get('filename', 'unnamed_file')} ({(msg.get('filesize', 0) / 1024):.1f} KB, type: {msg.get('filetype', 'unknown')})"
+            file_content = msg.get("content", "")
+            file_type = msg.get("filetype", "")
+            
+            # Try to extract text from the file
+            success, extracted_text = process_file_content(file_content, file_type)
+            
+            if success:
+                # Use the extracted text
+                file_info = f"File content from {msg.get('filename', 'unnamed_file')}:\n\n{extracted_text}"
+            else:
+                # Fallback to just showing file metadata
+                file_info = f"File attached: {msg.get('filename', 'unnamed_file')} ({(msg.get('filesize', 0) / 1024):.1f} KB, type: {file_type})\n\n{extracted_text}"
             
             # Add caption if available
             if msg.get("caption"):
-                file_info += f"\n\nMessage: {msg['caption']}"
+                file_info += f"\n\nUser message: {msg['caption']}"
                 
             formatted_messages.append({"role": "user", "content": file_info})
     
@@ -79,11 +90,22 @@ async def execute_openai_call(model_id: str, message_history: List[Dict[str, Any
                 formatted_messages.append({"role": "user", "content": image_content})
         elif user_input.get("type") == "file":
             # File input (non-image)
-            file_info = f"File attached: {user_input.get('filename', 'unnamed_file')} ({(user_input.get('filesize', 0) / 1024):.1f} KB, type: {user_input.get('filetype', 'unknown')})"
+            file_content = user_input.get("content", "")
+            file_type = user_input.get("filetype", "")
+            
+            # Try to extract text from the file
+            success, extracted_text = process_file_content(file_content, file_type)
+            
+            if success:
+                # Use the extracted text
+                file_info = f"File content from {user_input.get('filename', 'unnamed_file')}:\n\n{extracted_text}"
+            else:
+                # Fallback to just showing file metadata
+                file_info = f"File attached: {user_input.get('filename', 'unnamed_file')} ({(user_input.get('filesize', 0) / 1024):.1f} KB, type: {file_type})\n\n{extracted_text}"
             
             # Add caption if available
             if user_input.get("caption"):
-                file_info += f"\n\nMessage: {user_input['caption']}"
+                file_info += f"\n\nUser message: {user_input['caption']}"
                 
             formatted_messages.append({"role": "user", "content": file_info})
 

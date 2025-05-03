@@ -459,10 +459,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log("app.js: File selected:", file.name, file.type, file.size);
             
-            // Check if file is an image
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file.');
-                return;
+            // Accept all file types
+            // We'll handle different file types differently
+            const isImage = file.type.startsWith('image/');
+            
+            if (!isImage) {
+                console.log("app.js: Non-image file selected, will be sent as attachment");
             }
             
             // Store the file for later use
@@ -538,29 +540,45 @@ document.addEventListener('DOMContentLoaded', () => {
         let modelId = 'gpt-4o-mini';
         
         if (currentImage) {
-            console.log("app.js: Sending image message with" + (text ? " caption" : "out caption"));
-            // Handle image message
+            const isImage = currentImage.type.startsWith('image/');
+            console.log(`app.js: Sending ${isImage ? 'image' : 'file'} message with${text ? ' caption' : 'out caption'}`);
+            
+            // Handle file message
             const reader = new FileReader();
             reader.onload = (event) => {
-                const imageMessage = {
-                    type: 'image',
+                const fileMessage = {
+                    type: isImage ? 'image' : 'file',
                     role: 'user',
                     content: event.target.result,
                     caption: text, // Use text as caption if provided
+                    filename: currentImage.name,
+                    filetype: currentImage.type,
+                    filesize: currentImage.size,
                     timestamp: new Date().toISOString(),
                     model_id: modelId,
                     provider: "OpenAI"
                 };
                 
-                // Display image in chat
-                window.displayMessage(imageMessage, false);
+                // Display in chat
+                if (isImage) {
+                    window.displayMessage(fileMessage, false);
+                } else {
+                    // For non-image files, create a custom message
+                    const fileDisplayMessage = {
+                        role: 'user',
+                        type: 'text',
+                        content: `File attached: ${currentImage.name} (${(currentImage.size / 1024).toFixed(1)} KB)${text ? '<br>' + text : ''}`,
+                        timestamp: new Date().toISOString()
+                    };
+                    window.displayMessage(fileDisplayMessage, false);
+                }
                 
                 // Send to server
                 try {
-                    window.chatSocket.send(JSON.stringify(imageMessage));
-                    console.log("app.js: Image message sent to server");
+                    window.chatSocket.send(JSON.stringify(fileMessage));
+                    console.log(`app.js: ${isImage ? 'Image' : 'File'} message sent to server`);
                 } catch (e) {
-                    console.error("app.js: Error sending image message:", e);
+                    console.error(`app.js: Error sending ${isImage ? 'image' : 'file'} message:`, e);
                     window.hideTypingIndicator();
                 }
                 

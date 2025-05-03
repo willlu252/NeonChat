@@ -48,7 +48,8 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 * Python (version 3.8 or higher recommended)
 * `pip` (Python package installer)
-* Node.js and `npm` (or `yarn`)
+* Node.js (version 14 or higher) and `npm` (or `yarn`)
+* For image processing: Tesseract OCR (required for pytesseract)
 
 ### Installation
 
@@ -76,6 +77,11 @@ Follow these instructions to get a copy of the project up and running on your lo
         ```bash
         pip install -r backend/requirements.txt 
         ```
+        
+    * Note: If you encounter any dependency issues, you can also try the root requirements.txt:
+        ```bash
+        pip install -r requirements.txt
+        ```
 
 4.  **Install frontend dependencies:**
     * *(Run these commands in the root directory)*
@@ -85,13 +91,22 @@ Follow these instructions to get a copy of the project up and running on your lo
         ```
         *(or `yarn install` if you use Yarn)*
 
-5.  **Build the frontend:**
+5.  **Development Mode (Optional):**
+    * To run the frontend in development mode:
+        ```bash
+        cd frontend
+        npm run dev
+        ```
+    * This will start the Vite development server on port 5173
+
+6.  **Build the frontend:**
     * *(This command uses the build script defined in your `package.json`)*
         ```bash
+        cd frontend
         npm run build
         ```
         *(or `yarn build`)*
-        This should generate the static files in the `frontend/dist` directory, which the FastAPI backend serves.
+        This will generate the static files in the `frontend/dist` directory, which the FastAPI backend serves.
 
 ### Configuration
 
@@ -135,7 +150,46 @@ DEFAULT_MODEL=gpt-4o-mini
     python main.py
     ```
 3.  **Access the application:** Open your web browser and navigate to:
-    `http://localhost:8000`
+    `http://localhost:8000` (or whatever port you configured in your .env file)
+
+### Development Setup
+
+If you want to run both the frontend and backend in development mode:
+
+1. **Start the backend server:**
+   ```bash
+   cd backend
+   python main.py
+   ```
+   This will run on port 8000 by default (or the port specified in your .env file)
+
+2. **In a separate terminal, start the frontend development server:**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   This will run the Vite development server on port 5173
+
+3. **Access the development version:**
+   Open your browser and navigate to `http://localhost:5173`
+
+### Troubleshooting
+
+* **WebSocket Connection Issues:**
+  * Ensure both the frontend and backend servers are running
+  * Check that the WebSocket proxy in `frontend/vite.config.js` points to the correct backend port
+  * If you change the backend port in `.env`, you must also update the WebSocket proxy in `vite.config.js`
+
+* **Port Already in Use:**
+  * If you get an error like "address already in use", try changing the port in your `.env` file
+  * Remember to update the WebSocket proxy in `vite.config.js` to match the new port
+
+* **Missing Dependencies:**
+  * If you encounter missing dependencies, try installing from both requirements files:
+    ```bash
+    pip install -r backend/requirements.txt
+    pip install -r requirements.txt
+    ```
 
 ## Security Notes
 
