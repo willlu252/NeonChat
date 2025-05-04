@@ -51,13 +51,36 @@
                                 </div>
                             </div>
                             <div class="input-area">
+                                <div class="input-buttons">
+                                    <!-- Voice recording button -->
+                                    <button id="voice-record-btn" class="voice-btn" title="Record Voice">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                                        </svg>
+                                    </button>
+                                    
+                                    <!-- Image generation button -->
+                                    <button id="generate-image-btn" class="image-gen-btn" title="Generate Image">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
+                                    </button>
+                                    
+                                    <!-- File upload button -->
+                                    <label for="file-input" class="attachment-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                        </svg>
+                                    </label>
+                                    <input type="file" id="file-input" hidden>
+                                </div>
+                                
                                 <textarea id="chat-input" name="chat-input" class="chat-input" rows="1" placeholder="Type message..."></textarea>
-                                <label for="file-input" class="attachment-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                                    </svg>
-                                </label>
-                                <input type="file" id="file-input" hidden>
                                 <button id="send-button" class="send-btn">Send</button>
                             </div>
                         </div>
@@ -111,6 +134,101 @@
                             <label class="settings-label">Message History</label>
                             <div class="settings-control">
                                 <button id="clear-history-button" class="tron-button-secondary">Clear Chat History</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Voice Chat</h3>
+                        <div class="settings-option">
+                            <label class="settings-label">Enable Voice Responses</label>
+                            <div class="settings-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="voice-enabled-setting">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Use Conversational Voice Mode</label>
+                            <div class="settings-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="conversational-mode-setting">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    Uses OpenAI's advanced voice conversation API for more natural speech interactions
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Conversation Mode</label>
+                            <div class="settings-control">
+                                <select id="conversation-mode-setting" class="tron-input">
+                                    <option value="cheap">Cheap (GPT-4o mini)</option>
+                                    <option value="complex">Complex (GPT-4o)</option>
+                                </select>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    Choose between affordable or more capable AI for voice conversations
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Voice</label>
+                            <div class="settings-control">
+                                <select id="voice-type-setting" class="tron-input">
+                                    <option value="alloy">Alloy (Neutral)</option>
+                                    <option value="echo">Echo (Male)</option>
+                                    <option value="fable">Fable (Female)</option>
+                                    <option value="onyx">Onyx (Male)</option>
+                                    <option value="nova">Nova (Female)</option>
+                                    <option value="shimmer">Shimmer (Female)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Speech Speed</label>
+                            <div class="settings-control">
+                                <input type="range" id="voice-speed-setting" min="0.5" max="2.0" step="0.1" value="1.0" class="tron-slider">
+                                <span id="voice-speed-value">1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Image Generation</h3>
+                        <div class="settings-option">
+                            <label class="settings-label">Default Size</label>
+                            <div class="settings-control">
+                                <select id="image-size-setting" class="tron-input">
+                                    <option value="1024x1024">Square (1024x1024)</option>
+                                    <option value="1792x1024">Landscape (1792x1024)</option>
+                                    <option value="1024x1792">Portrait (1024x1792)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Quality</label>
+                            <div class="settings-control">
+                                <select id="image-quality-setting" class="tron-input">
+                                    <option value="standard">Standard</option>
+                                    <option value="hd">HD (Higher Cost)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-option">
+                            <label class="settings-label">Style</label>
+                            <div class="settings-control">
+                                <select id="image-style-setting" class="tron-input">
+                                    <option value="vivid">Vivid</option>
+                                    <option value="natural">Natural</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -237,6 +355,60 @@
                 </div>
             </div>
         </main>
+        
+        <!-- Image Generation Modal -->
+        <div id="image-gen-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center" style="display: none;">
+            <div class="bg-darker-bg rounded-lg neon-border p-6 max-w-md w-full text-tron-white">
+                <h3 class="text-xl font-bold text-neon-blue mb-4">Generate Image</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label>Prompt</label>
+                        <textarea id="image-prompt" class="tron-input" rows="4" placeholder="Describe the image you want to generate..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label>Size</label>
+                            <select id="image-size" class="tron-input">
+                                <option value="1024x1024">Square (1024x1024)</option>
+                                <option value="1792x1024">Landscape (1792x1024)</option>
+                                <option value="1024x1792">Portrait (1024x1792)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Quality</label>
+                            <select id="image-quality" class="tron-input">
+                                <option value="standard">Standard</option>
+                                <option value="hd">HD (Higher Cost)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Style</label>
+                        <select id="image-style" class="tron-input">
+                            <option value="vivid">Vivid</option>
+                            <option value="natural">Natural</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button id="cancel-image-btn" class="tron-button-secondary">Cancel</button>
+                        <button id="generate-image-submit-btn" class="tron-button">Generate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recording Indicator -->
+        <div id="recording-indicator" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-darker-bg rounded-lg neon-border p-3 hidden">
+            <div class="flex items-center space-x-2">
+                <div class="recording-pulse"></div>
+                <span>Recording... <span id="recording-time">0:00</span></span>
+                <button id="stop-recording-btn" class="ml-2 p-1 rounded-full bg-red-500 hover:bg-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="6" width="12" height="12"></rect>
+                    </svg>
+                </button>
+            </div>
+        </div>
         
         <!-- Project Form Modal -->
         <div id="project-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center" style="display: none;">

@@ -491,12 +491,187 @@ input[type="file"] { display: none; }
 .typing-indicator span { color: #888; font-style: italic; font-size: 0.9em; }
 
 
+/* Voice recording button */
+.voice-btn {
+    background: transparent;
+    border: none;
+    color: var(--neon-blue);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.voice-btn:hover {
+    color: var(--neon-pink);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.voice-btn.recording {
+    color: #ff4b4b;
+    animation: pulse 1.5s infinite;
+}
+
+/* Image generation button */
+.image-gen-btn {
+    background: transparent;
+    border: none;
+    color: var(--neon-blue);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.image-gen-btn:hover {
+    color: var(--neon-pink);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Input buttons container */
+.input-buttons {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+/* Toggle switch for settings */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--neon-blue);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Recording pulse animation */
+.recording-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff4b4b;
+    animation: pulse 1.5s infinite;
+}
+
+/* Slider for voice speed */
+.tron-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #333;
+    outline: none;
+    margin-bottom: 8px;
+}
+
+.tron-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--neon-blue);
+    cursor: pointer;
+}
+
+.tron-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--neon-blue);
+    cursor: pointer;
+}
+
+/* Audio message styling */
+.message-audio-container {
+    margin: 10px 0;
+}
+
+.audio-player {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--neon-blue);
+}
+
+/* Generated image styling */
+.message-generated-image {
+    margin-top: 5px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.image-prompt-caption {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-top: 5px;
+    font-style: italic;
+}
+
 /* Animations */
 @keyframes pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
 @keyframes flow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 @keyframes typing { from { width: 0 } to { width: 100% } }
 @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--neon-blue) } }
 @keyframes border-flow { 0% { border-color: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); } 50% { border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); } 100% { border-color: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); } }
+
+/* Realtime Response Styling */
+.realtime-response {
+    white-space: pre-wrap;
+    border-left: 3px solid var(--neon-green);
+    position: relative;
+}
+
+.realtime-response::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 10px;
+    height: 20px;
+    background-color: var(--neon-green);
+    animation: blink-caret 0.75s step-end infinite;
+}
 
 
 /* Responsive */

@@ -209,3 +209,11 @@ Desktop.ini
 # Any other project-specific temporary files or logs
 # *.tmp
 # *.log
+
+# --- Large Files ---
+# FFmpeg related files
+ffmpeg.zip
+backend/ffmpeg.exe
+ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
+ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffplay.exe
+ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffprobe.exe
