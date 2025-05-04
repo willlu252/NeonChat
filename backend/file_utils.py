@@ -3,7 +3,23 @@ import os
 import base64
 import io
 from typing import Optional, Tuple
-import docx
+try:
+    import docx
+except ImportError:
+    try:
+        from python_docx import Document as docx
+    except ImportError:
+        # Create a mock docx module for basic functionality
+        class MockDocument:
+            def __init__(self, *args, **kwargs):
+                self.paragraphs = []
+        
+        class MockDocx:
+            def Document(self, *args, **kwargs):
+                return MockDocument()
+        
+        docx = MockDocx()
+        print("WARNING: python-docx module not found. DOCX processing will be limited.")
 import re
 
 def extract_text_from_docx(docx_content: str) -> str:

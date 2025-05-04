@@ -11,6 +11,7 @@ This project serves as a foundation for experimenting with different AI models a
 * Chat interface supporting various AI models.
 * Currently supported providers: OpenAI, Google AI, Anthropic, DeepSeek, Perplexity.
 * Real-time interaction using WebSockets.
+* Conversation debugging features with audio transcription and real-time voice chat.
 * Settings page to manage API keys (stored securely in your browser's local storage).
 * Model selection capabilities.
 * Renders model responses as Markdown.
@@ -208,12 +209,28 @@ To add support for a new API provider:
 2. Create a new function in `api_calls.py` to handle the API calls to the new provider.
 3. Update the frontend to include the new provider in the model selection dropdown.
 
+### Conversation Debugging Features
+
+The conversation debugging branch adds several new features to enhance the chat experience:
+
+* **Audio Transcription**: Convert spoken audio to text using OpenAI's transcription API.
+* **Real-time Voice Chat**: Engage in voice conversations with AI models using OpenAI's Realtime API.
+* **Conversation Analysis**: Debug and analyze conversations for improved interaction quality.
+* **Audio Playback**: Listen to AI-generated responses with text-to-speech capabilities.
+
+These features require the following dependencies:
+* FFmpeg for audio processing (included in the repository)
+* pydub for audio format conversion
+* OpenAI's Realtime API support
+
 ### Project Structure
 
 * `backend/` - Contains all backend code
   * `main.py` - FastAPI application entry point
   * `api_calls.py` - Functions for making API calls to various providers
   * `config_utils.py` - Configuration management utilities
+  * `realtime_api.py` - Handles real-time voice conversation features
+  * `file_utils.py` - Utilities for file processing
   * `.env` - Environment variables (not in version control)
   * `.env.example` - Example environment variables file
 * `frontend/` - Contains all frontend code
