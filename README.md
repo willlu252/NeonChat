@@ -29,6 +29,7 @@ This project serves as a foundation for experimenting with different AI models a
     * Google Generative AI Library
     * Requests
     * python-dotenv (Environment variable management)
+    * Modular architecture with separation of concerns
     * *(Other dependencies listed in `backend/requirements.txt`)*
 * **Frontend:**
     * Vite (Build tool / Dev server)
@@ -191,6 +192,46 @@ If you want to run both the frontend and backend in development mode:
     pip install -r backend/requirements.txt
     pip install -r requirements.txt
     ```
+
+## Backend Architecture
+
+NeonChat uses a modular architecture designed for maintainability, scalability, and clarity:
+
+* **App Structure:**
+  ```
+  backend/
+  └── app/
+      ├── api/
+      │   ├── routes/
+      │   └── ws/
+      ├── services/
+      ├── models/
+      └── utils/
+  ```
+
+* **Modules:**
+  * **API Layer** (`api/`): Handles HTTP routes and WebSocket connections
+    * `routes/`: HTTP endpoint definitions
+    * `ws/`: WebSocket message handlers for different message types
+  * **Service Layer** (`services/`): Contains business logic
+    * `message_service.py`: Manages chat messages and history
+    * `voice_service.py`: Handles speech-to-text and text-to-speech
+    * `image_service.py`: Manages image generation
+    * `api_service.py`: Centralizes API calls to AI providers
+  * **Model Layer** (`models/`): Defines data structures
+    * `message.py`: Message and chat history structures
+    * `session.py`: User session management
+  * **Utilities** (`utils/`): Helper functions
+    * `config_utils.py`: Configuration and API key management
+    * `file_utils.py`: File processing utilities
+    * `audio_utils.py`: Audio format handling
+
+* **Benefits:**
+  * Clear separation of concerns
+  * Improved maintainability
+  * Easier to extend with new features
+  * Better testability
+  * Simplified onboarding for new developers
 
 ## Security Notes
 
