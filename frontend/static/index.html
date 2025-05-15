@@ -52,25 +52,6 @@
                             </div>
                             <div class="input-area">
                                 <div class="input-buttons">
-                                    <!-- Voice recording button -->
-                                    <button id="voice-record-btn" class="voice-btn" title="Record Voice">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                            <line x1="12" y1="19" x2="12" y2="23"></line>
-                                            <line x1="8" y1="23" x2="16" y2="23"></line>
-                                        </svg>
-                                    </button>
-                                    
-                                    <!-- Image generation button -->
-                                    <button id="generate-image-btn" class="image-gen-btn" title="Generate Image">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                            <polyline points="21 15 16 10 5 21"></polyline>
-                                        </svg>
-                                    </button>
-                                    
                                     <!-- File upload button -->
                                     <label for="file-input" class="attachment-btn">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -134,67 +115,6 @@
                             <label class="settings-label">Message History</label>
                             <div class="settings-control">
                                 <button id="clear-history-button" class="tron-button-secondary">Clear Chat History</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Voice Chat</h3>
-                        <div class="settings-option">
-                            <label class="settings-label">Enable Voice Responses</label>
-                            <div class="settings-control">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="voice-enabled-setting">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Use Conversational Voice Mode</label>
-                            <div class="settings-control">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="conversational-mode-setting">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    Uses OpenAI's advanced voice conversation API for more natural speech interactions
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Conversation Mode</label>
-                            <div class="settings-control">
-                                <select id="conversation-mode-setting" class="tron-input">
-                                    <option value="cheap">Cheap (GPT-4o mini)</option>
-                                    <option value="complex">Complex (GPT-4o)</option>
-                                </select>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    Choose between affordable or more capable AI for voice conversations
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Voice</label>
-                            <div class="settings-control">
-                                <select id="voice-type-setting" class="tron-input">
-                                    <option value="alloy">Alloy (Neutral)</option>
-                                    <option value="echo">Echo (Male)</option>
-                                    <option value="fable">Fable (Female)</option>
-                                    <option value="onyx">Onyx (Male)</option>
-                                    <option value="nova">Nova (Female)</option>
-                                    <option value="shimmer">Shimmer (Female)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Speech Speed</label>
-                            <div class="settings-control">
-                                <input type="range" id="voice-speed-setting" min="0.5" max="2.0" step="0.1" value="1.0" class="tron-slider">
-                                <span id="voice-speed-value">1.0x</span>
                             </div>
                         </div>
                     </div>

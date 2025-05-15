@@ -5,7 +5,7 @@ from typing import Dict, Any
 from datetime import datetime
 
 from ...services.message_service import message_service
-from ..ws import text_handler, image_handler, file_handler, audio_handler, realtime_handler
+from ..ws import text_handler, image_handler, file_handler
 
 # Dictionary to store active WebSocket connections
 active_connections = {}
@@ -40,12 +40,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 
             elif message_type == 'file':
                 await file_handler.handle_file_message(websocket, client_id, data)
-                
-            elif message_type == 'audio':
-                await audio_handler.handle_audio_message(websocket, client_id, data)
-                
-            elif message_type in ['realtime_audio', 'realtime_start', 'realtime_stop']:
-                await realtime_handler.handle_realtime_message(websocket, client_id, data)
                 
             elif message_type == 'generate_image':
                 await image_handler.handle_image_generation(websocket, client_id, data)

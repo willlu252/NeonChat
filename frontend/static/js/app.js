@@ -13,49 +13,30 @@ console.log("app.js: Script loaded");
 let chatCanvas;
 function formatMessageContent(content) { if (!content) return ''; try { return marked.parse(content || ''); } catch (e) { console.error("Markdown error:", e); return content; } }
 
-// Convert base64 to blob for audio playback
-function base64ToBlob(base64, mimeType) {
-    const byteCharacters = atob(base64);
-    const byteArrays = [];
-    
-    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-        
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-    }
-    
-    return new Blob(byteArrays, { type: mimeType });
-}
-
 // Create WAV header for PCM16 audio
+/*
 function createWavHeader(dataLength, numChannels, sampleRate, bitsPerSample) {
     const headerLength = 44;
     const wavHeader = new Uint8Array(headerLength);
     
     // RIFF chunk descriptor
-    writeString(wavHeader, 0, 'RIFF');                      // ChunkID
-    writeInt32(wavHeader, 4, 36 + dataLength);              // ChunkSize
-    writeString(wavHeader, 8, 'WAVE');                      // Format
+    writeString(wavHeader, 0, 'RIFF');
+    writeInt32(wavHeader, 4, 36 + dataLength);
+    writeString(wavHeader, 8, 'WAVE');
     
     // fmt sub-chunk
-    writeString(wavHeader, 12, 'fmt ');                     // Subchunk1ID
-    writeInt32(wavHeader, 16, 16);                          // Subchunk1Size (16 for PCM)
-    writeInt16(wavHeader, 20, 1);                           // AudioFormat (1 for PCM)
-    writeInt16(wavHeader, 22, numChannels);                 // NumChannels
-    writeInt32(wavHeader, 24, sampleRate);                  // SampleRate
-    writeInt32(wavHeader, 28, sampleRate * numChannels * bitsPerSample / 8); // ByteRate
-    writeInt16(wavHeader, 32, numChannels * bitsPerSample / 8); // BlockAlign
-    writeInt16(wavHeader, 34, bitsPerSample);               // BitsPerSample
+    writeString(wavHeader, 12, 'fmt ');
+    writeInt32(wavHeader, 16, 16);
+    writeInt16(wavHeader, 20, 1);
+    writeInt16(wavHeader, 22, numChannels);
+    writeInt32(wavHeader, 24, sampleRate);
+    writeInt32(wavHeader, 28, sampleRate * numChannels * bitsPerSample / 8);
+    writeInt16(wavHeader, 32, numChannels * bitsPerSample / 8);
+    writeInt16(wavHeader, 34, bitsPerSample);
     
     // data sub-chunk
-    writeString(wavHeader, 36, 'data');                     // Subchunk2ID
-    writeInt32(wavHeader, 40, dataLength);                  // Subchunk2Size
+    writeString(wavHeader, 36, 'data');
+    writeInt32(wavHeader, 40, dataLength);
     
     return wavHeader;
 }
@@ -78,6 +59,7 @@ function writeInt32(dataView, offset, value) {
     dataView[offset + 2] = (value >> 16) & 0xff;
     dataView[offset + 3] = (value >> 24) & 0xff;
 }
+*/
 
 window.displayMessage = (message, useTypewriter = false) => {
      const localChatMessages = document.getElementById('chat-messages');
@@ -179,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearHistoryButton = document.getElementById('clear-history-button');
     
     // Voice and image generation elements
-    const voiceRecordBtn = document.getElementById('voice-record-btn');
     const generateImageBtn = document.getElementById('generate-image-btn');
     const imageGenModal = document.getElementById('image-gen-modal');
     const imagePromptInput = document.getElementById('image-prompt');
@@ -188,31 +169,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageStyleSelect = document.getElementById('image-style');
     const generateImageSubmitBtn = document.getElementById('generate-image-submit-btn');
     const cancelImageBtn = document.getElementById('cancel-image-btn');
-    const recordingIndicator = document.getElementById('recording-indicator');
-    const recordingTimeDisplay = document.getElementById('recording-time');
-    const stopRecordingBtn = document.getElementById('stop-recording-btn');
     
     // Settings elements
-    const voiceEnabledSetting = document.getElementById('voice-enabled-setting');
-    const voiceTypeSetting = document.getElementById('voice-type-setting');
-    const voiceSpeedSetting = document.getElementById('voice-speed-setting');
-    const voiceSpeedValue = document.getElementById('voice-speed-value');
     const imageSizeSetting = document.getElementById('image-size-setting');
     const imageQualitySetting = document.getElementById('image-quality-setting');
     const imageStyleSetting = document.getElementById('image-style-setting');
     
-    // Voice recording variables
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recordingTimer = null;
-    let recordingSeconds = 0;
-    
     // Voice and image settings
-    let voiceEnabled = localStorage.getItem('voice_enabled') === 'true';
-    let conversationalMode = localStorage.getItem('conversational_mode') === 'true';
-    let conversationMode = localStorage.getItem('conversation_mode') || 'cheap';
-    let selectedVoice = localStorage.getItem('selected_voice') || 'alloy';
-    let voiceSpeed = parseFloat(localStorage.getItem('voice_speed') || '1.0');
     let defaultImageSize = localStorage.getItem('image_size') || '1024x1024';
     let defaultImageQuality = localStorage.getItem('image_quality') || 'standard';
     let defaultImageStyle = localStorage.getItem('image_style') || 'vivid';
@@ -512,109 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             chatCanvas.scrollTop = chatCanvas.scrollHeight;
                         }
                     }
-                } else if (message.type === 'audio_delta') {
-                    // Handle realtime audio deltas
-                    console.log("app.js: Received audio delta");
-                    
-                    // Play the audio if it's available
-                    if (message.audio_data) {
-                        try {
-                            // Create a global audio context if it doesn't exist
-                            if (!window.audioContext) {
-                                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                                window.audioContext = new AudioContext();
-                                console.log("app.js: Created global audio context");
-                                
-                                // Create a gain node for volume control
-                                window.gainNode = window.audioContext.createGain();
-                                window.gainNode.gain.value = 1.0; // Full volume
-                                window.gainNode.connect(window.audioContext.destination);
-                            }
-                            
-                            // 1. Decode Base64 to binary
-                            const binaryString = atob(message.audio_data);
-                            
-                            // 2. Convert binary string to array buffer
-                            const bytes = new Uint8Array(binaryString.length);
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            
-                            // 3. Create WAV header for PCM16 audio at 24kHz
-                            const wavHeader = createWavHeader(bytes.length, 1, 24000, 16);
-                            
-                            // 4. Concatenate WAV header with audio data
-                            const audioBuffer = new Uint8Array(wavHeader.length + bytes.length);
-                            audioBuffer.set(wavHeader);
-                            audioBuffer.set(bytes, wavHeader.length);
-                            
-                            // Use Web Audio API directly for more reliable playback
-                            window.audioContext.decodeAudioData(
-                                audioBuffer.buffer,
-                                (decodedBuffer) => {
-                                    console.log("app.js: Audio decoded successfully with Web Audio API");
-                                    
-                                    // Create a buffer source node
-                                    const source = window.audioContext.createBufferSource();
-                                    source.buffer = decodedBuffer;
-                                    
-                                    // Connect to the gain node (which is connected to the destination)
-                                    source.connect(window.gainNode);
-                                    
-                                    // Play the audio
-                                    source.start(0);
-                                    console.log("app.js: Audio playback started with Web Audio API");
-                                    
-                                    // Handle completion
-                                    source.onended = () => {
-                                        console.log("app.js: Audio playback ended");
-                                    };
-                                },
-                                (error) => {
-                                    console.error("app.js: Error decoding audio:", error);
-                                    
-                                    // Fallback to Audio element if Web Audio API fails
-                                    try {
-                                        // Create blob with WAV format
-                                        const audioBlob = new Blob([audioBuffer], { type: 'audio/wav' });
-                                        const audioUrl = URL.createObjectURL(audioBlob);
-                                        
-                                        // Create and configure audio element
-                                        const audioElement = new Audio(audioUrl);
-                                        audioElement.volume = 1.0;
-                                        
-                                        // Add event listeners for debugging
-                                        audioElement.addEventListener('play', () => {
-                                            console.log("app.js: Audio playback started with Audio element");
-                                        });
-                                        
-                                        audioElement.addEventListener('ended', () => {
-                                            console.log("app.js: Audio playback ended");
-                                            // Clean up the URL object to prevent memory leaks
-                                            URL.revokeObjectURL(audioUrl);
-                                        });
-                                        
-                                        audioElement.addEventListener('error', (e) => {
-                                            console.error("app.js: Audio playback error:", e);
-                                        });
-                                        
-                                        // Play the audio
-                                        audioElement.play()
-                                            .then(() => {
-                                                console.log("app.js: Audio playback started successfully with Audio element");
-                                            })
-                                            .catch(e => {
-                                                console.error("app.js: Error playing audio with Audio element:", e);
-                                            });
-                                    } catch (audioElementErr) {
-                                        console.error("app.js: Audio element fallback error:", audioElementErr);
-                                    }
-                                }
-                            );
-                        } catch (e) {
-                            console.error("app.js: Error processing audio delta:", e);
-                        }
-                    }
                 } else if (message.type === 'response_done') {
                     // Handle completion of realtime response
                     console.log("app.js: Realtime response complete");
@@ -628,15 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Format with markdown
                         deltaElement.innerHTML = formatMessageContent(deltaElement.textContent);
                     }
-                } else if (message.type === 'transcription') {
-                    // Display transcription as a system message
-                    const transcriptionMsg = {
-                        role: 'system',
-                        content: message.content,
-                        type: 'text',
-                        timestamp: message.timestamp
-                    };
-                    window.displayMessage(transcriptionMsg, false);
                 } else if (message.role === 'assistant') {
                     window.hideTypingIndicator();
                     window.displayMessage(message, true);
@@ -770,57 +621,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Initialize settings
-    if (voiceEnabledSetting) voiceEnabledSetting.checked = voiceEnabled;
-    const conversationalModeSetting = document.getElementById('conversational-mode-setting');
-    if (conversationalModeSetting) conversationalModeSetting.checked = conversationalMode;
-    const conversationModeSetting = document.getElementById('conversation-mode-setting');
-    if (conversationModeSetting) conversationModeSetting.value = conversationMode;
-    if (voiceTypeSetting) voiceTypeSetting.value = selectedVoice;
-    if (voiceSpeedSetting) {
-        voiceSpeedSetting.value = voiceSpeed;
-        if (voiceSpeedValue) voiceSpeedValue.textContent = `${voiceSpeed}x`;
-    }
     if (imageSizeSetting) imageSizeSetting.value = defaultImageSize;
     if (imageQualitySetting) imageQualitySetting.value = defaultImageQuality;
     if (imageStyleSetting) imageStyleSetting.value = defaultImageStyle;
     
     // Settings event listeners
-    if (voiceEnabledSetting) {
-        voiceEnabledSetting.addEventListener('change', () => {
-            voiceEnabled = voiceEnabledSetting.checked;
-            localStorage.setItem('voice_enabled', voiceEnabled);
-        });
-    }
-    
-    if (conversationalModeSetting) {
-        conversationalModeSetting.addEventListener('change', () => {
-            conversationalMode = conversationalModeSetting.checked;
-            localStorage.setItem('conversational_mode', conversationalMode);
-        });
-    }
-    
-    if (conversationModeSetting) {
-        conversationModeSetting.addEventListener('change', () => {
-            conversationMode = conversationModeSetting.value;
-            localStorage.setItem('conversation_mode', conversationMode);
-        });
-    }
-    
-    if (voiceTypeSetting) {
-        voiceTypeSetting.addEventListener('change', () => {
-            selectedVoice = voiceTypeSetting.value;
-            localStorage.setItem('selected_voice', selectedVoice);
-        });
-    }
-    
-    if (voiceSpeedSetting) {
-        voiceSpeedSetting.addEventListener('input', () => {
-            voiceSpeed = parseFloat(voiceSpeedSetting.value);
-            if (voiceSpeedValue) voiceSpeedValue.textContent = `${voiceSpeed.toFixed(1)}x`;
-            localStorage.setItem('voice_speed', voiceSpeed);
-        });
-    }
-    
     if (imageSizeSetting) {
         imageSizeSetting.addEventListener('change', () => {
             defaultImageSize = imageSizeSetting.value;
@@ -840,194 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultImageStyle = imageStyleSetting.value;
             localStorage.setItem('image_style', defaultImageStyle);
         });
-    }
-    
-    // Voice recording functionality
-    if (voiceRecordBtn) {
-        voiceRecordBtn.addEventListener('click', toggleRecording);
-    }
-    
-    if (stopRecordingBtn) {
-        stopRecordingBtn.addEventListener('click', stopRecording);
-    }
-    
-    async function toggleRecording() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            stopRecording();
-            return;
-        }
-        
-        try {
-            // First, check if the user has granted microphone permissions
-            const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
-            if (permissionStatus.state === 'denied') {
-                alert("Microphone access is denied. Please allow microphone access in your browser settings and try again.");
-                return;
-            }
-            
-            // Request audio with specific constraints for better compatibility
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: {
-                    channelCount: 1,          // Mono audio
-                    sampleRate: 44100,        // Standard sample rate
-                    echoCancellation: true,   // Reduce echo
-                    noiseSuppression: true    // Reduce background noise
-                } 
-            });
-            
-            // Prioritize formats that OpenAI supports directly
-            const supportedMimeTypes = [
-                'audio/mp3',
-                'audio/mpeg',
-                'audio/mp4',
-                'audio/wav',
-                'audio/webm',
-                'audio/ogg'
-            ];
-            
-            let selectedMimeType = null;
-            for (const mimeType of supportedMimeTypes) {
-                if (MediaRecorder.isTypeSupported(mimeType)) {
-                    selectedMimeType = mimeType;
-                    console.log(`app.js: Found supported MIME type: ${mimeType}`);
-                    break;
-                }
-            }
-            
-            if (!selectedMimeType) {
-                console.warn("app.js: No supported MIME types found, using default");
-                selectedMimeType = '';  // Use default
-            }
-            
-            // Create MediaRecorder with the selected MIME type
-            const options = selectedMimeType ? { mimeType: selectedMimeType } : {};
-            mediaRecorder = new MediaRecorder(stream, options);
-            audioChunks = [];
-            
-            console.log(`app.js: MediaRecorder created with MIME type: ${mediaRecorder.mimeType}`);
-            
-            // Set up continuous recording with smaller chunks
-            mediaRecorder.addEventListener('dataavailable', event => {
-                audioChunks.push(event.data);
-                console.log(`app.js: Audio chunk received, size: ${event.data.size} bytes, type: ${event.data.type}`);
-                
-                // Process audio chunks in real-time if we have enough data
-                if (audioChunks.length >= 3) {  // Process after collecting a few chunks
-                    processAudioChunks();
-                }
-            });
-            
-            mediaRecorder.addEventListener('stop', finalizeAudioRecording);
-            
-            // Start recording with smaller timeslice (200ms chunks)
-            mediaRecorder.start(200);  // Get data every 200ms for more real-time experience
-            voiceRecordBtn.classList.add('recording');
-            recordingIndicator.classList.remove('hidden');
-            
-            // Start timer
-            recordingSeconds = 0;
-            updateRecordingTime();
-            recordingTimer = setInterval(updateRecordingTime, 1000);
-            
-            console.log(`app.js: Voice recording started with MIME type: ${mediaRecorder.mimeType}`);
-        } catch (error) {
-            console.error("app.js: Error starting voice recording:", error);
-            
-            if (error.name === 'NotAllowedError') {
-                alert("Microphone access was denied. Please allow microphone access in your browser settings and try again.");
-            } else {
-                alert("Could not access microphone. Error: " + error.message);
-            }
-        }
-    }
-    
-    function updateRecordingTime() {
-        recordingSeconds++;
-        const minutes = Math.floor(recordingSeconds / 60);
-        const seconds = recordingSeconds % 60;
-        recordingTimeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        
-        // Auto-stop after 2 minutes to prevent very large files
-        if (recordingSeconds >= 120) {
-            stopRecording();
-        }
-    }
-    
-    function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-            voiceRecordBtn.classList.remove('recording');
-            recordingIndicator.classList.add('hidden');
-            clearInterval(recordingTimer);
-            
-            // Stop all tracks on the stream
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            
-            console.log("app.js: Voice recording stopped");
-        }
-    }
-    
-    // Process audio chunks in real-time during recording
-    async function processAudioChunks() {
-        if (audioChunks.length === 0) return;
-        
-        try {
-            // Create a temporary blob from current chunks
-            // Use wav MIME type to ensure compatibility with OpenAI's transcription API
-            const tempBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const reader = new FileReader();
-            
-            reader.onload = async (event) => {
-                const audioBase64 = event.target.result;
-                
-                // Send to server for real-time processing without showing UI elements
-                try {
-                    // Get default model
-                    let modelId = 'gpt-4o-mini';
-                    
-                    // Create message to send
-                    const audioMessage = {
-                        type: 'audio',
-                        role: 'user',
-                        audio_data: audioBase64,
-                        tts_enabled: voiceEnabled,
-                        conversational_mode: conversationalMode,
-                        conversation_mode: conversationMode,
-                        voice: selectedVoice,
-                        speed: voiceSpeed,
-                        audio_format: 'wav',  // Explicitly set to wav for compatibility
-                        timestamp: new Date().toISOString(),
-                        model_id: modelId,
-                        provider: "OpenAI"
-                    };
-                    
-                    // Log the MIME type being used
-                    console.log("app.js: Audio MIME type:", tempBlob.type);
-                    
-                    // Send to server
-                    window.chatSocket.send(JSON.stringify(audioMessage));
-                    console.log("app.js: Real-time audio chunk sent to server");
-                    
-                    // Clear the chunks after sending to avoid duplicate processing
-                    audioChunks = [];
-                } catch (e) {
-                    console.error("app.js: Error sending real-time audio chunk:", e);
-                }
-            };
-            
-            reader.readAsDataURL(tempBlob);
-        } catch (error) {
-            console.error("app.js: Error processing real-time audio chunks:", error);
-        }
-    }
-    
-    // Finalize audio recording when stopped
-    async function finalizeAudioRecording() {
-        console.log("app.js: Finalizing audio recording");
-        
-        // No need to send the audio again as we've been sending chunks in real-time
-        // Just clean up and prepare for the next recording
-        audioChunks = [];
     }
     
     // Image generation functionality

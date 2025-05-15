@@ -491,27 +491,6 @@ input[type="file"] { display: none; }
 .typing-indicator span { color: #888; font-style: italic; font-size: 0.9em; }
 
 
-/* Voice recording button */
-.voice-btn {
-    background: transparent;
-    border: none;
-    color: var(--neon-blue);
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.voice-btn:hover {
-    color: var(--neon-pink);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.voice-btn.recording {
-    color: #ff4b4b;
-    animation: pulse 1.5s infinite;
-}
-
 /* Image generation button */
 .image-gen-btn {
     background: transparent;
@@ -579,73 +558,6 @@ input:checked + .toggle-slider {
 
 input:checked + .toggle-slider:before {
     transform: translateX(26px);
-}
-
-/* Recording pulse animation */
-.recording-pulse {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #ff4b4b;
-    animation: pulse 1.5s infinite;
-}
-
-/* Slider for voice speed */
-.tron-slider {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 4px;
-    background: #333;
-    outline: none;
-    margin-bottom: 8px;
-}
-
-.tron-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--neon-blue);
-    cursor: pointer;
-}
-
-.tron-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--neon-blue);
-    cursor: pointer;
-}
-
-/* Audio message styling */
-.message-audio-container {
-    margin: 10px 0;
-}
-
-.audio-player {
-    width: 100%;
-    height: 40px;
-    border-radius: 20px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--neon-blue);
-}
-
-/* Generated image styling */
-.message-generated-image {
-    margin-top: 5px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--neon-blue);
-    box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
-}
-
-.image-prompt-caption {
-    font-size: 0.8rem;
-    color: #aaa;
-    margin-top: 5px;
-    font-style: italic;
 }
 
 /* Animations */
