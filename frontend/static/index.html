@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat App - Reverted Baseline</title>
+    <title>Claude Chat - Anthropic's Advanced AI Assistant</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="./js/app.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         <div class="relative h-full">
             <div class="sidebar">
                 <div class="sidebar-header mb-6">
-                    <h1 class="text-xl font-bold neon-text">AI Chat</h1>
+                    <h1 class="text-xl font-bold neon-text">Claude Chat</h1>
                     <div class="border-b border-neon-blue my-2"></div>
                 </div>
                 <div class="navigation">
@@ -25,7 +25,6 @@
                         <button id="chat-nav" class="nav-link active">Chat</button>
                         <button id="settings-nav" class="nav-link">Settings</button>
                         <button id="projects-nav" class="nav-link">Projects</button>
-                        <button id="models-nav" class="nav-link">Models Info</button>
                     </div>
                 </div>
             </div>
@@ -61,7 +60,7 @@
                                     <input type="file" id="file-input" hidden>
                                 </div>
                                 
-                                <textarea id="chat-input" name="chat-input" class="chat-input" rows="1" placeholder="Type message..."></textarea>
+                                <textarea id="chat-input" name="chat-input" class="chat-input" rows="1" placeholder="Ask Claude anything..."></textarea>
                                 <button id="send-button" class="send-btn">Send</button>
                             </div>
                         </div>
@@ -100,14 +99,12 @@
                     <div class="settings-section">
                         <h3 class="settings-section-title">Chat</h3>
                         <div class="settings-option">
-                            <label class="settings-label">Default Model</label>
+                            <label class="settings-label">Model</label>
                             <div class="settings-control">
-                                <select class="tron-input">
-                                    <option value="gpt-4o-mini" selected>GPT-4o mini</option>
-                                    <option value="gpt-4o">GPT-4o</option>
-                                    <option value="claude-3-haiku">Claude 3 Haiku</option>
-                                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                                <select class="tron-input" disabled>
+                                    <option value="claude-3.7-sonnet" selected>Claude 3.7 Sonnet</option>
                                 </select>
+                                <small class="text-gray-400 mt-1 block">Claude 3.7 Sonnet is Anthropic's most advanced model</small>
                             </div>
                         </div>
                         
@@ -120,45 +117,12 @@
                     </div>
                     
                     <div class="settings-section">
-                        <h3 class="settings-section-title">Image Generation</h3>
-                        <div class="settings-option">
-                            <label class="settings-label">Default Size</label>
-                            <div class="settings-control">
-                                <select id="image-size-setting" class="tron-input">
-                                    <option value="1024x1024">Square (1024x1024)</option>
-                                    <option value="1792x1024">Landscape (1792x1024)</option>
-                                    <option value="1024x1792">Portrait (1024x1792)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Quality</label>
-                            <div class="settings-control">
-                                <select id="image-quality-setting" class="tron-input">
-                                    <option value="standard">Standard</option>
-                                    <option value="hd">HD (Higher Cost)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-option">
-                            <label class="settings-label">Style</label>
-                            <div class="settings-control">
-                                <select id="image-style-setting" class="tron-input">
-                                    <option value="vivid">Vivid</option>
-                                    <option value="natural">Natural</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
                         <h3 class="settings-section-title">About</h3>
                         <div class="about-info">
-                            <p>NeonChat v1.0.0</p>
-                            <p>A TRON-themed chat interface for interacting with various frontier AI models.</p>
-                            <p class="mt-2">© 2025 NeonChat</p>
+                            <p>Claude Chat v2.0.0</p>
+                            <p>A sleek interface for Claude 3.7 Sonnet, Anthropic's most advanced AI assistant. Featuring natural conversations, file uploads, and intelligent responses.</p>
+                            <p class="mt-2">Powered by Anthropic's Claude 3.7 Sonnet</p>
+                            <p class="mt-2">© 2025 Claude Chat</p>
                         </div>
                     </div>
                 </div>
@@ -176,146 +140,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Models Info View -->
-                <div id="models-view" class="models-info-container-revert" style="display: none;">
-                    <div class="projects-header">AI Models Information</div>
-                    <div class="models-description mb-4">
-                        <p>This application supports various AI models from different providers. Below is information about each available model, including capabilities and context window size.</p>
-                    </div>
-                    
-                    <div class="models-grid">
-                        <!-- OpenAI Models -->
-                        <div class="model-provider-section">
-                            <h3 class="provider-title">OpenAI Models</h3>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">GPT-4o mini</h4>
-                                <div class="model-details">
-                                    <p class="model-description">OpenAI's most affordable and fastest model as of its release. Designed to offer strong intelligence for its cost.</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 128K tokens</span>
-                                        <span class="model-spec">Input: $0.15/1M tokens</span>
-                                        <span class="model-spec">Output: $0.60/1M tokens</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">GPT-4o</h4>
-                                <div class="model-details">
-                                    <p class="model-description">Highly capable flagship model with strong performance across text, reasoning, coding, and native multimodality (audio, vision, text).</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 128K tokens</span>
-                                        <span class="model-spec">Input: $2.50/1M tokens</span>
-                                        <span class="model-spec">Output: $10.00/1M tokens</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Anthropic Models -->
-                        <div class="model-provider-section">
-                            <h3 class="provider-title">Anthropic Models</h3>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">Claude 3 Haiku</h4>
-                                <div class="model-details">
-                                    <p class="model-description">The fastest and most compact model in the Claude 3 family, designed for near-instant responsiveness.</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 200K tokens</span>
-                                        <span class="model-spec">Input: $0.25/1M tokens</span>
-                                        <span class="model-spec">Output: $1.25/1M tokens</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">Claude 3 Sonnet</h4>
-                                <div class="model-details">
-                                    <p class="model-description">A balance between intelligence and speed, suitable for enterprise workloads like data processing, RAG, and coding tasks.</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 200K tokens</span>
-                                        <span class="model-spec">Input: $3.00/1M tokens</span>
-                                        <span class="model-spec">Output: $15.00/1M tokens</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Google Models -->
-                        <div class="model-provider-section">
-                            <h3 class="provider-title">Google Models</h3>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">Gemini 1.5 Flash</h4>
-                                <div class="model-details">
-                                    <p class="model-description">Optimised for speed and cost-efficiency while maintaining strong multimodal capabilities and a large context window.</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 1M tokens</span>
-                                        <span class="model-spec">Input: $0.075/1M tokens (≤128k)</span>
-                                        <span class="model-spec">Output: $0.30/1M tokens (≤128k)</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="model-card">
-                                <h4 class="model-name">Gemini 1.5 Pro</h4>
-                                <div class="model-details">
-                                    <p class="model-description">Google's most capable Gemini 1.5 series model for complex reasoning, multimodal understanding, coding, and tasks requiring high intelligence.</p>
-                                    <div class="model-specs">
-                                        <span class="model-spec">Context: 2M tokens</span>
-                                        <span class="model-spec">Input: $1.25/1M tokens (≤128k)</span>
-                                        <span class="model-spec">Output: $5.00/1M tokens (≤128k)</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
-        
-        <!-- Image Generation Modal -->
-        <div id="image-gen-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center" style="display: none;">
-            <div class="bg-darker-bg rounded-lg neon-border p-6 max-w-md w-full text-tron-white">
-                <h3 class="text-xl font-bold text-neon-blue mb-4">Generate Image</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label>Prompt</label>
-                        <textarea id="image-prompt" class="tron-input" rows="4" placeholder="Describe the image you want to generate..."></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label>Size</label>
-                            <select id="image-size" class="tron-input">
-                                <option value="1024x1024">Square (1024x1024)</option>
-                                <option value="1792x1024">Landscape (1792x1024)</option>
-                                <option value="1024x1792">Portrait (1024x1792)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Quality</label>
-                            <select id="image-quality" class="tron-input">
-                                <option value="standard">Standard</option>
-                                <option value="hd">HD (Higher Cost)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label>Style</label>
-                        <select id="image-style" class="tron-input">
-                            <option value="vivid">Vivid</option>
-                            <option value="natural">Natural</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-2">
-                        <button id="cancel-image-btn" class="tron-button-secondary">Cancel</button>
-                        <button id="generate-image-submit-btn" class="tron-button">Generate</button>
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <!-- Recording Indicator -->
         <div id="recording-indicator" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-darker-bg rounded-lg neon-border p-3 hidden">

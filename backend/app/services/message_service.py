@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 from ..models.message import Message, MessageHistory, MessageType
-from ..utils.config_utils import get_api_key, get_config
+from ..utils.config_utils import get_config
 
 class MessageService:
     """Service for handling message operations."""

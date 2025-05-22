@@ -1,123 +1,191 @@
 # app/services/api_service.py
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, AsyncIterator
 import json
-from openai import AsyncOpenAI
-from ..utils.config_utils import get_api_key, get_config
+import httpx
+from ..utils.config_utils import get_api_key
 from ..utils.file_utils import process_file_content
 
 class ApiService:
-    """Service for handling API calls to AI models."""
+    """Service for handling API calls to Claude models."""
     
     def __init__(self):
-        self.config = get_config()
-        self.openai_api_key = get_api_key("openai")
         self.anthropic_api_key = get_api_key("anthropic")
-        self.google_api_key = get_api_key("google")
     
-    async def execute_openai_call(
+    async def execute_claude_call_streaming(
         self, 
-        model_id: str, 
         message_history: List[Dict[str, Any]], 
         user_input: Union[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    ) -> AsyncIterator[Dict[str, Any]]:
         """
-        Execute an API call to OpenAI ChatGPT models.
+        Execute a streaming API call to Anthropic Claude 3.7 Sonnet.
         
         Args:
-            model_id: The model ID to use
             message_history: Previous conversation history
             user_input: User input (text or structured data)
             
-        Returns:
-            The AI response
+        Yields:
+            Streaming response chunks
         """
-        if not self.openai_api_key:
-            return {"role": "assistant", "content": "API key not configured. Please set up your OpenAI API key."}
+        if not self.anthropic_api_key:
+            yield {
+                "role": "assistant", 
+                "content": "Anthropic API key not configured. Please set up your Anthropic API key in the .env file.",
+                "type": "error",
+                "done": True
+            }
+            return
         
         try:
-            # Set up API client
-            client = AsyncOpenAI(api_key=self.openai_api_key)
-            
-            # Prepare messages
+            # Use Claude 3.7 Sonnet model
+            model_id = "claude-3-7-sonnet-20250219"
+
+            # Prepare messages in Anthropic format
             messages = []
             for msg in message_history:
-                # Skip messages that aren't compatible with the OpenAI API
-                if msg.get('type') in ['system', 'text', 'image_url', 'image']:
-                    # Convert our internal message format to OpenAI's format
-                    if msg.get('role') in ['user', 'assistant', 'system']:
-                        openai_msg = {"role": msg.get('role'), "content": msg.get('content')}
-                        
-                        # Handle image messages
-                        if msg.get('type') == 'image':
-                            # For image messages, create a message with text and image
-                            openai_msg["content"] = []
-                            
-                            # Add caption text if available, otherwise use a generic message
-                            caption = msg.get('caption', 'Image for analysis')
-                            openai_msg["content"].append({"type": "text", "text": caption})
-                            
-                            # Add the image
-                            if 'image_url' in msg:
-                                openai_msg["content"].append({
-                                    "type": "image_url",
-                                    "image_url": {"url": msg['image_url']}
-                                })
-                        
-                        messages.append(openai_msg)
+                if msg.get('role') in ['user', 'assistant'] and 'content' in msg:
+                    messages.append({
+                        "role": msg.get('role'),
+                        "content": msg.get('content')
+                    })
             
-            # Add the current user message
+            # Add current user message
             if isinstance(user_input, str):
-                # Simple text message
-                user_message = {"role": "user", "content": user_input}
-                messages.append(user_message)
-            else:
-                # Complex message (e.g., with images or files)
-                if user_input.get('type') == 'image':
-                    # Handle image URLs in the content
-                    user_message = {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": user_input.get('caption', 'Image for analysis')},
-                            {"type": "image_url", "image_url": {"url": user_input.get('content')}}
-                        ]
-                    }
-                    messages.append(user_message)
-                elif user_input.get('type') == 'file':
+                messages.append({"role": "user", "content": user_input})
+            elif isinstance(user_input, dict):
+                if user_input.get('type') == 'file':
                     # Process file content
                     success, text = process_file_content(user_input.get('content'), user_input.get('filetype', 'text/plain'))
                     if success:
                         file_message = f"File content: {text}"
                         if 'caption' in user_input:
                             file_message = f"{user_input['caption']}\n\n{file_message}"
-                        user_message = {"role": "user", "content": file_message}
-                        messages.append(user_message)
+                        messages.append({"role": "user", "content": file_message})
                     else:
-                        user_message = {"role": "user", "content": f"Error processing file: {text}"}
-                        messages.append(user_message)
+                        yield {
+                            "role": "assistant", 
+                            "content": f"Error processing file: {text}",
+                            "type": "error",
+                            "done": True
+                        }
+                        return
+                else:
+                    # Handle other message types
+                    content = user_input.get('content', '')
+                    if user_input.get('caption'):
+                        content = f"{user_input['caption']}\n\n{content}"
+                    messages.append({"role": "user", "content": content})
             
-            # Make the API call
-            response = await client.chat.completions.create(
-                model=model_id,
-                messages=messages,
-                temperature=0.7,
-                max_tokens=4000,
-                top_p=1.0,
-                frequency_penalty=0.0,
-                presence_penalty=0.0
-            )
-            
-            # Extract and return the response
-            response_message = response.choices[0].message
-            return {
-                "role": "assistant",
-                "content": response_message.content,
+            # Construct the API payload with streaming enabled
+            payload = {
                 "model": model_id,
-                "type": "text"
+                "messages": messages,
+                "max_tokens": 4096,
+                "temperature": 0.7,
+                "stream": True  # Enable streaming
             }
             
+            # Call Anthropic API with streaming
+            headers = {
+                "x-api-key": self.anthropic_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                async with client.stream(
+                    "POST",
+                    "https://api.anthropic.com/v1/messages",
+                    json=payload,
+                    headers=headers,
+                    timeout=60.0
+                ) as response:
+                    
+                    if response.status_code != 200:
+                        yield {
+                            "role": "assistant", 
+                            "content": f"Sorry, an error occurred with the Claude API: {response.status_code}",
+                            "type": "error",
+                            "done": True
+                        }
+                        return
+                    
+                    # Process streaming response
+                    async for line in response.aiter_lines():
+                        if line.startswith('data: '):
+                            data = line[6:]  # Remove 'data: ' prefix
+                            
+                            if data == '[DONE]':
+                                yield {
+                                    "role": "assistant",
+                                    "content": "",
+                                    "model": model_id,
+                                    "type": "text",
+                                    "done": True
+                                }
+                                return
+                            
+                            try:
+                                chunk = json.loads(data)
+                                
+                                # Handle different event types
+                                if chunk.get('type') == 'content_block_delta':
+                                    delta = chunk.get('delta', {})
+                                    if delta.get('type') == 'text_delta':
+                                        text = delta.get('text', '')
+                                        if text:
+                                            yield {
+                                                "role": "assistant",
+                                                "content": text,
+                                                "model": model_id,
+                                                "type": "text_chunk",
+                                                "done": False
+                                            }
+                                
+                                elif chunk.get('type') == 'message_stop':
+                                    yield {
+                                        "role": "assistant",
+                                        "content": "",
+                                        "model": model_id,
+                                        "type": "text",
+                                        "done": True
+                                    }
+                                    return
+                                    
+                            except json.JSONDecodeError:
+                                continue  # Skip malformed JSON
+                
         except Exception as e:
-            print(f"ERROR: API call failed: {str(e)}")
-            return {"role": "assistant", "content": f"Sorry, an error occurred: {str(e)}", "type": "text"}
+            print(f"ERROR: Claude streaming API call failed: {str(e)}")
+            yield {
+                "role": "assistant", 
+                "content": f"Sorry, an error occurred: {str(e)}",
+                "type": "error",
+                "done": True
+            }
+
+    async def execute_claude_call(
+        self, 
+        message_history: List[Dict[str, Any]], 
+        user_input: Union[str, Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Execute a non-streaming API call to Anthropic Claude 3.7 Sonnet.
+        This is kept for backward compatibility, but streaming is preferred.
+        """
+        # Collect all streaming chunks into a single response
+        full_content = ""
+        async for chunk in self.execute_claude_call_streaming(message_history, user_input):
+            if chunk.get("type") == "text_chunk":
+                full_content += chunk.get("content", "")
+            elif chunk.get("done"):
+                break
+        
+        return {
+            "role": "assistant",
+            "content": full_content,
+            "model": "claude-3-7-sonnet-20250219",
+            "type": "text"
+        }
 
 # Create a global service instance
 api_service = ApiService()

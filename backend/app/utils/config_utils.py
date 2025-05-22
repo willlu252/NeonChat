@@ -7,36 +7,30 @@ from typing import Dict, Any, Optional
 # Load environment variables from .env file
 load_dotenv()
 
-def get_api_key(provider: str = "openai") -> Optional[str]:
+def get_api_key(provider: str = "anthropic") -> Optional[str]:
     """
-    Get API key for the specified provider from environment variables.
+    Get API key for Anthropic Claude from environment variables.
     
     Args:
-        provider: The API provider (e.g., "openai", "anthropic", "google")
+        provider: The API provider (only "anthropic" supported)
         
     Returns:
         The API key if found, None otherwise
     """
-    if provider.lower() == "openai":
-        return os.environ.get("OPENAI_API_KEY")
-    elif provider.lower() == "anthropic":
+    if provider.lower() == "anthropic":
         return os.environ.get("ANTHROPIC_API_KEY")
-    elif provider.lower() == "google":
-        return os.environ.get("GOOGLE_API_KEY")
     return None
 
 def get_config() -> Dict[str, Any]:
     """
-    Get application configuration from environment variables and config files.
+    Get application configuration from environment variables.
     
     Returns:
         Dictionary containing configuration values
     """
     config = {
         "api_keys": {
-            "openai": get_api_key("openai"),
-            "anthropic": get_api_key("anthropic"),
-            "google": get_api_key("google")
+            "anthropic": get_api_key("anthropic")
         },
         "server": {
             "host": os.environ.get("HOST", "0.0.0.0"),
@@ -44,7 +38,7 @@ def get_config() -> Dict[str, Any]:
             "debug": os.environ.get("DEBUG", "False").lower() in ("true", "1", "t")
         },
         "models": {
-            "default": os.environ.get("DEFAULT_MODEL", "gpt-4o-mini")
+            "default": "claude-3-7-sonnet-20250219"
         }
     }
     
@@ -52,24 +46,18 @@ def get_config() -> Dict[str, Any]:
 
 def save_example_env_file(path: str = ".env.example") -> None:
     """
-    Create an example .env file with placeholders for required environment variables.
-    This is useful for new developers setting up the project.
+    Create an example .env file with placeholder for Anthropic API key.
     
     Args:
         path: Path to save the example file
     """
-    example_content = """# API Keys - Replace with your actual keys
-OPENAI_API_KEY=your_openai_api_key_here
+    example_content = """# API Key - Replace with your actual Anthropic API key
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
-GOOGLE_API_KEY=your_google_api_key_here
 
 # Server Configuration
 HOST=0.0.0.0
 PORT=8000
 DEBUG=False
-
-# Model Configuration
-DEFAULT_MODEL=gpt-4o-mini
 """
     
     with open(path, "w") as f:
@@ -81,12 +69,12 @@ if __name__ == "__main__":
     # If this file is run directly, create an example .env file
     save_example_env_file()
     
-    # Print current configuration (with API keys masked)
+    # Print current configuration (with API key masked)
     config = get_config()
-    for provider, key in config["api_keys"].items():
-        if key:
-            config["api_keys"][provider] = f"{key[:5]}...{key[-5:]}" if len(key) > 10 else "***"
-        else:
-            config["api_keys"][provider] = "Not set"
+    key = config["api_keys"]["anthropic"]
+    if key:
+        config["api_keys"]["anthropic"] = f"{key[:5]}...{key[-5:]}" if len(key) > 10 else "***"
+    else:
+        config["api_keys"]["anthropic"] = "Not set"
     
     print(json.dumps(config, indent=2))

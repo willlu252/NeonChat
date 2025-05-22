@@ -11,62 +11,25 @@ console.log("app.js: Script loaded");
 
 // --- Global Helper Functions ---
 let chatCanvas;
-function formatMessageContent(content) { if (!content) return ''; try { return marked.parse(content || ''); } catch (e) { console.error("Markdown error:", e); return content; } }
-
-// Create WAV header for PCM16 audio
-/*
-function createWavHeader(dataLength, numChannels, sampleRate, bitsPerSample) {
-    const headerLength = 44;
-    const wavHeader = new Uint8Array(headerLength);
-    
-    // RIFF chunk descriptor
-    writeString(wavHeader, 0, 'RIFF');
-    writeInt32(wavHeader, 4, 36 + dataLength);
-    writeString(wavHeader, 8, 'WAVE');
-    
-    // fmt sub-chunk
-    writeString(wavHeader, 12, 'fmt ');
-    writeInt32(wavHeader, 16, 16);
-    writeInt16(wavHeader, 20, 1);
-    writeInt16(wavHeader, 22, numChannels);
-    writeInt32(wavHeader, 24, sampleRate);
-    writeInt32(wavHeader, 28, sampleRate * numChannels * bitsPerSample / 8);
-    writeInt16(wavHeader, 32, numChannels * bitsPerSample / 8);
-    writeInt16(wavHeader, 34, bitsPerSample);
-    
-    // data sub-chunk
-    writeString(wavHeader, 36, 'data');
-    writeInt32(wavHeader, 40, dataLength);
-    
-    return wavHeader;
+function formatMessageContent(content) { 
+    if (!content) return ''; 
+    try { 
+        return marked.parse(content || ''); 
+    } catch (e) { 
+        console.error("Markdown error:", e); 
+        return content; 
+    } 
 }
-
-// Helper functions for writing to the WAV header
-function writeString(dataView, offset, string) {
-    for (let i = 0; i < string.length; i++) {
-        dataView[offset + i] = string.charCodeAt(i);
-    }
-}
-
-function writeInt16(dataView, offset, value) {
-    dataView[offset] = value & 0xff;
-    dataView[offset + 1] = (value >> 8) & 0xff;
-}
-
-function writeInt32(dataView, offset, value) {
-    dataView[offset] = value & 0xff;
-    dataView[offset + 1] = (value >> 8) & 0xff;
-    dataView[offset + 2] = (value >> 16) & 0xff;
-    dataView[offset + 3] = (value >> 24) & 0xff;
-}
-*/
 
 window.displayMessage = (message, useTypewriter = false) => {
      const localChatMessages = document.getElementById('chat-messages');
      if (!localChatMessages || !message || !message.role) return;
      const messageElement = document.createElement('div');
      messageElement.className = `message ${message.role === 'user' ? 'message-user' : 'message-ai'}`;
-     if (message.role === 'system') { messageElement.classList.add('message-system'); messageElement.classList.remove('message-ai'); }
+     if (message.role === 'system') { 
+         messageElement.classList.add('message-system'); 
+         messageElement.classList.remove('message-ai'); 
+     }
      if (message.type === 'image' && message.content) {
          // Create image container
          const imgContainer = document.createElement('div');
@@ -96,11 +59,19 @@ window.displayMessage = (message, useTypewriter = false) => {
          // Add container to message
          messageElement.appendChild(imgContainer);
      }
-     else if (useTypewriter && message.role === 'assistant') { messageElement.classList.add('typewriter'); typewriterEffect(messageElement, message.content || ''); }
-     else { messageElement.innerHTML = formatMessageContent(message.content || ''); }
+     else if (useTypewriter && message.role === 'assistant') { 
+         messageElement.classList.add('typewriter'); 
+         typewriterEffect(messageElement, message.content || ''); 
+     }
+     else { 
+         messageElement.innerHTML = formatMessageContent(message.content || ''); 
+     }
      localChatMessages.appendChild(messageElement);
-     requestAnimationFrame(() => { if (chatCanvas) chatCanvas.scrollTop = chatCanvas.scrollHeight; }); // Use global chatCanvas
+     requestAnimationFrame(() => { 
+         if (chatCanvas) chatCanvas.scrollTop = chatCanvas.scrollHeight; 
+     });
 };
+
 function typewriterEffect(element, text, speed = 5) {
     let i = 0;
     element.textContent = '';
@@ -129,12 +100,13 @@ function typewriterEffect(element, text, speed = 5) {
     
     type();
 }
+
 function autoResizeInput() { 
     if (!this || typeof this.scrollHeight === 'undefined') return; 
     this.style.height = 'auto'; 
     const newHeight = this.scrollHeight; 
     const minHeight = 40; 
-    const maxHeight = 150; // Match the CSS max-height valnue
+    const maxHeight = 150;
     
     // Set the height within min and max constraints
     this.style.height = Math.min(Math.max(minHeight, newHeight), maxHeight) + 'px';
@@ -142,8 +114,17 @@ function autoResizeInput() {
     // Enable or disable scrolling based on content height
     this.style.overflowY = newHeight > maxHeight ? 'auto' : 'hidden';
 }
-window.showTypingIndicator = () => { const el = document.querySelector('.typing-indicator'); if (el) el.classList.remove('hidden'); /* + scroll */ };
-window.hideTypingIndicator = () => { const el = document.querySelector('.typing-indicator'); if (el) el.classList.add('hidden'); };
+
+window.showTypingIndicator = () => { 
+    const el = document.querySelector('.typing-indicator'); 
+    if (el) el.classList.remove('hidden'); 
+};
+
+window.hideTypingIndicator = () => { 
+    const el = document.querySelector('.typing-indicator'); 
+    if (el) el.classList.add('hidden'); 
+};
+
 // --- END Global Helper Functions ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,37 +141,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearImageButton = document.getElementById('clear-image');
     const clearHistoryButton = document.getElementById('clear-history-button');
     
-    // Voice and image generation elements
-    const generateImageBtn = document.getElementById('generate-image-btn');
-    const imageGenModal = document.getElementById('image-gen-modal');
-    const imagePromptInput = document.getElementById('image-prompt');
-    const imageSizeSelect = document.getElementById('image-size');
-    const imageQualitySelect = document.getElementById('image-quality');
-    const imageStyleSelect = document.getElementById('image-style');
-    const generateImageSubmitBtn = document.getElementById('generate-image-submit-btn');
-    const cancelImageBtn = document.getElementById('cancel-image-btn');
-    
-    // Settings elements
-    const imageSizeSetting = document.getElementById('image-size-setting');
-    const imageQualitySetting = document.getElementById('image-quality-setting');
-    const imageStyleSetting = document.getElementById('image-style-setting');
-    
-    // Voice and image settings
-    let defaultImageSize = localStorage.getItem('image_size') || '1024x1024';
-    let defaultImageQuality = localStorage.getItem('image_quality') || 'standard';
-    let defaultImageStyle = localStorage.getItem('image_style') || 'vivid';
-    
     // Navigation elements
     const chatNav = document.getElementById('chat-nav');
     const settingsNav = document.getElementById('settings-nav');
     const projectsNav = document.getElementById('projects-nav');
-    const modelsNav = document.getElementById('models-nav');
     
     // View elements
     const chatView = document.getElementById('chat-view');
     const settingsView = document.getElementById('settings-view');
     const projectsView = document.getElementById('projects-view');
-    const modelsView = document.getElementById('models-view');
     
     // Sidebar toggle
     const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -254,13 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
         chatView.style.display = 'none';
         settingsView.style.display = 'none';
         projectsView.style.display = 'none';
-        modelsView.style.display = 'none';
         
         // Remove active class from all nav buttons
         chatNav.classList.remove('active');
         settingsNav.classList.remove('active');
         projectsNav.classList.remove('active');
-        modelsNav.classList.remove('active');
         
         // Show selected view and set active nav button
         switch (view) {
@@ -276,10 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 projectsView.style.display = 'block';
                 projectsNav.classList.add('active');
                 break;
-            case 'models':
-                modelsView.style.display = 'block';
-                modelsNav.classList.add('active');
-                break;
         }
     }
     
@@ -290,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatNav.addEventListener('click', () => setActiveView('chat'));
     settingsNav.addEventListener('click', () => setActiveView('settings'));
     projectsNav.addEventListener('click', () => setActiveView('projects'));
-    modelsNav.addEventListener('click', () => setActiveView('models'));
     
     // Sidebar toggle
     sidebarToggle.addEventListener('click', () => {
@@ -433,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.chatSocket = null;
     try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        const wsUrl = `${protocol}//localhost:8000/ws`;
         console.log(`app.js: Attempting to connect to WebSocket at ${wsUrl}`);
         
         window.chatSocket = new WebSocket(wsUrl);
@@ -442,6 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("app.js: WebSocket connection established");
         };
         
+        // Track streaming state
+        let currentStreamingMessage = null;
+        let streamingElement = null;
+        
         window.chatSocket.onmessage = function(event) {
             try {
                 const message = JSON.parse(event.data);
@@ -449,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (message.type === 'client_id') {
                     console.log(`app.js: Client ID received: ${message.content}`);
-                    // Store client ID if needed
                     window.clientId = message.content;
                 } else if (message.type === 'indicator') {
                     if (message.content === 'typing') {
@@ -457,8 +412,84 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         window.hideTypingIndicator();
                     }
+                } else if (message.type === 'text_chunk') {
+                    // Handle streaming text chunks
+                    window.hideTypingIndicator();
+                    
+                    if (!currentStreamingMessage) {
+                        // Start new streaming message
+                        currentStreamingMessage = {
+                            role: 'assistant',
+                            content: '',
+                            type: 'text',
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        // Create streaming element
+                        streamingElement = document.createElement('div');
+                        streamingElement.className = 'message message-ai streaming-response';
+                        streamingElement.innerHTML = '<span class="streaming-cursor">|</span>';
+                        document.getElementById('chat-messages').appendChild(streamingElement);
+                        
+                        // Add CSS for blinking cursor if not already present
+                        if (!document.querySelector('#streaming-cursor-style')) {
+                            const style = document.createElement('style');
+                            style.id = 'streaming-cursor-style';
+                            style.textContent = `
+                                .streaming-cursor {
+                                    animation: blink 1s infinite;
+                                    color: #00ffff;
+                                }
+                                @keyframes blink {
+                                    0%, 50% { opacity: 1; }
+                                    51%, 100% { opacity: 0; }
+                                }
+                            `;
+                            document.head.appendChild(style);
+                        }
+                    }
+                    
+                    // Append new content
+                    currentStreamingMessage.content += message.content || '';
+                    
+                    // Update display with cursor
+                    if (streamingElement) {
+                        streamingElement.innerHTML = formatMessageContent(currentStreamingMessage.content) + 
+                                                   '<span class="streaming-cursor">|</span>';
+                        
+                        // Scroll to bottom
+                        if (chatCanvas) {
+                            chatCanvas.scrollTop = chatCanvas.scrollHeight;
+                        }
+                    }
+                } else if (message.done === true || message.type === 'response_done') {
+                    // Complete the streaming message
+                    if (currentStreamingMessage && streamingElement) {
+                        // Remove cursor and finalize message
+                        streamingElement.innerHTML = formatMessageContent(currentStreamingMessage.content);
+                        streamingElement.classList.remove('streaming-response');
+                        
+                        // Save complete message to history
+                        try {
+                            const savedHistory = localStorage.getItem('chat_history') || '[]';
+                            const history = JSON.parse(savedHistory);
+                            if (Array.isArray(history)) {
+                                history.push(currentStreamingMessage);
+                                const limitedHistory = history.slice(-100);
+                                localStorage.setItem('chat_history', JSON.stringify(limitedHistory));
+                            }
+                        } catch (e) {
+                            console.error("app.js: Error saving message to history:", e);
+                        }
+                        
+                        // Reset streaming state
+                        currentStreamingMessage = null;
+                        streamingElement = null;
+                        
+                        console.log("app.js: Streaming response completed");
+                    }
                 } else if (message.type === 'text_delta') {
-                    // Handle realtime text deltas
+                    // Handle legacy realtime text deltas (fallback)
                     const deltaElement = document.querySelector('.realtime-response');
                     if (deltaElement) {
                         // Append to existing realtime response
@@ -475,36 +506,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             chatCanvas.scrollTop = chatCanvas.scrollHeight;
                         }
                     }
-                } else if (message.type === 'response_done') {
-                    // Handle completion of realtime response
-                    console.log("app.js: Realtime response complete");
-                    
-                    // Convert the realtime response to a regular message
-                    const deltaElement = document.querySelector('.realtime-response');
-                    if (deltaElement) {
-                        // Remove the realtime-response class
-                        deltaElement.classList.remove('realtime-response');
-                        
-                        // Format with markdown
-                        deltaElement.innerHTML = formatMessageContent(deltaElement.textContent);
-                    }
                 } else if (message.role === 'assistant') {
+                    // Handle complete non-streaming messages (fallback)
                     window.hideTypingIndicator();
-                    window.displayMessage(message, true);
                     
-                    // Save message to history
-                    try {
-                        const savedHistory = localStorage.getItem('chat_history') || '[]';
-                        const history = JSON.parse(savedHistory);
-                        if (Array.isArray(history)) {
-                            // Add the new message
-                            history.push(message);
-                            // Limit history to last 100 messages to prevent localStorage overflow
-                            const limitedHistory = history.slice(-100);
-                            localStorage.setItem('chat_history', JSON.stringify(limitedHistory));
+                    // Only display if not currently streaming
+                    if (!currentStreamingMessage) {
+                        window.displayMessage(message, true);
+                        
+                        // Save message to history
+                        try {
+                            const savedHistory = localStorage.getItem('chat_history') || '[]';
+                            const history = JSON.parse(savedHistory);
+                            if (Array.isArray(history)) {
+                                history.push(message);
+                                const limitedHistory = history.slice(-100);
+                                localStorage.setItem('chat_history', JSON.stringify(limitedHistory));
+                            }
+                        } catch (e) {
+                            console.error("app.js: Error saving message to history:", e);
                         }
-                    } catch (e) {
-                        console.error("app.js: Error saving message to history:", e);
                     }
                 }
             } catch (e) {
@@ -542,14 +563,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     else console.error("Could not find #chat-messages for indicator.");
 
-    // Attach basic listeners managed by standard JS
+    // Attach basic listeners
     if (chatInput && chatInput.tagName.toLowerCase() === 'textarea') {
         chatInput.addEventListener('input', autoResizeInput, false);
-        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); } });
+        chatInput.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                window.sendMessage(); 
+            } 
+        });
         // Add paste event listener for clipboard images
         chatInput.addEventListener('paste', handlePastedImage);
     }
-    if (sendButton) { sendButton.addEventListener('click', () => { window.sendMessage(); }); }
+    if (sendButton) { 
+        sendButton.addEventListener('click', () => { 
+            window.sendMessage(); 
+        }); 
+    }
     
     // File input change handler
     if (fileInput) {
@@ -558,14 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!file) return;
             
             console.log("app.js: File selected:", file.name, file.type, file.size);
-            
-            // Accept all file types
-            // We'll handle different file types differently
-            const isImage = file.type.startsWith('image/');
-            
-            if (!isImage) {
-                console.log("app.js: Non-image file selected, will be sent as attachment");
-            }
             
             // Store the file for later use
             currentImage = file;
@@ -620,115 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Initialize settings
-    if (imageSizeSetting) imageSizeSetting.value = defaultImageSize;
-    if (imageQualitySetting) imageQualitySetting.value = defaultImageQuality;
-    if (imageStyleSetting) imageStyleSetting.value = defaultImageStyle;
-    
-    // Settings event listeners
-    if (imageSizeSetting) {
-        imageSizeSetting.addEventListener('change', () => {
-            defaultImageSize = imageSizeSetting.value;
-            localStorage.setItem('image_size', defaultImageSize);
-        });
-    }
-    
-    if (imageQualitySetting) {
-        imageQualitySetting.addEventListener('change', () => {
-            defaultImageQuality = imageQualitySetting.value;
-            localStorage.setItem('image_quality', defaultImageQuality);
-        });
-    }
-    
-    if (imageStyleSetting) {
-        imageStyleSetting.addEventListener('change', () => {
-            defaultImageStyle = imageStyleSetting.value;
-            localStorage.setItem('image_style', defaultImageStyle);
-        });
-    }
-    
-    // Image generation functionality
-    if (generateImageBtn) {
-        generateImageBtn.addEventListener('click', () => {
-            // Set default values from settings
-            if (imageSizeSelect) imageSizeSelect.value = defaultImageSize;
-            if (imageQualitySelect) imageQualitySelect.value = defaultImageQuality;
-            if (imageStyleSelect) imageStyleSelect.value = defaultImageStyle;
-            
-            // Clear previous prompt
-            if (imagePromptInput) imagePromptInput.value = '';
-            
-            // Show modal
-            if (imageGenModal) imageGenModal.style.display = 'flex';
-        });
-    }
-    
-    if (cancelImageBtn) {
-        cancelImageBtn.addEventListener('click', () => {
-            if (imageGenModal) imageGenModal.style.display = 'none';
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (imageGenModal) {
-        imageGenModal.addEventListener('click', (e) => {
-            if (e.target === imageGenModal) {
-                imageGenModal.style.display = 'none';
-            }
-        });
-    }
-    
-    if (generateImageSubmitBtn) {
-        generateImageSubmitBtn.addEventListener('click', () => {
-            const prompt = imagePromptInput.value.trim();
-            if (!prompt) {
-                alert('Please enter a prompt for the image generation');
-                return;
-            }
-            
-            // Get settings
-            const size = imageSizeSelect.value;
-            const quality = imageQualitySelect.value;
-            const style = imageStyleSelect.value;
-            
-            // Hide modal
-            imageGenModal.style.display = 'none';
-            
-            // Show typing indicator
-            window.showTypingIndicator();
-            
-            // Create message to send
-            const imageGenMessage = {
-                type: 'generate_image',
-                prompt: prompt,
-                size: size,
-                quality: quality,
-                style: style,
-                timestamp: new Date().toISOString(),
-                model_id: 'dall-e-3',
-                provider: "OpenAI"
-            };
-            
-            // Display user message
-            const userMessage = {
-                role: 'user',
-                type: 'text',
-                content: `Generating image: ${prompt}`,
-                timestamp: new Date().toISOString()
-            };
-            window.displayMessage(userMessage, false);
-            
-            // Send to server
-            try {
-                window.chatSocket.send(JSON.stringify(imageGenMessage));
-                console.log("app.js: Image generation request sent to server");
-            } catch (e) {
-                console.error("app.js: Error sending image generation request:", e);
-                window.hideTypingIndicator();
-            }
-        });
-    }
-    
     // Send message function
     window.sendMessage = () => {
         const localChatInput = document.getElementById('chat-input');
@@ -745,9 +658,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show typing indicator while processing
         window.showTypingIndicator();
         
-        // Default model
-        let modelId = 'gpt-4o-mini';
-        
         if (currentImage) {
             const isImage = currentImage.type.startsWith('image/');
             console.log(`app.js: Sending ${isImage ? 'image' : 'file'} message with${text ? ' caption' : 'out caption'}`);
@@ -759,13 +669,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: isImage ? 'image' : 'file',
                     role: 'user',
                     content: event.target.result,
-                    caption: text, // Use text as caption if provided
+                    caption: text,
                     filename: currentImage.name,
                     filetype: currentImage.type,
                     filesize: currentImage.size,
                     timestamp: new Date().toISOString(),
-                    model_id: modelId,
-                    provider: "OpenAI"
+                    model_id: 'claude-3-7-sonnet-20250219',
+                    provider: "Claude"
                 };
                 
                 // Display in chat
@@ -802,8 +712,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.log("app.js: Sending text message");
             // Regular text message
-            const userMessage = { type: 'text', role: 'user', content: text, timestamp: new Date().toISOString() };
-            const messageToSend = { ...userMessage, model_id: modelId, provider: "OpenAI" };
+            const userMessage = { 
+                type: 'text', 
+                role: 'user', 
+                content: text, 
+                timestamp: new Date().toISOString() 
+            };
+            const messageToSend = { 
+                ...userMessage, 
+                model_id: 'claude-3-7-sonnet-20250219', 
+                provider: "Claude" 
+            };
             
             try {
                 window.chatSocket.send(JSON.stringify(messageToSend));

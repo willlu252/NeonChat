@@ -22,8 +22,8 @@ export default defineConfig({
     // IMPORTANT: The proxy configuration must match the backend server port
     // If you change the PORT in backend/.env, you must update these URLs
     proxy: {
-      '/api': 'http://localhost:8004',
-      '/ws': { target: 'ws://localhost:8004', ws: true },
+      '/api': 'http://localhost:8000',
+      '/ws': { target: 'ws://localhost:8000', ws: true },
     },
   },
 });

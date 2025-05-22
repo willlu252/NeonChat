@@ -1,24 +1,15 @@
-# Main dependencies
+# Main dependencies for Claude chat app
 fastapi>=0.109.1
 uvicorn>=0.27.0
 websockets>=12.0
 python-multipart>=0.0.6
 
-# API clients
-openai[realtime]>=1.20.0  # Added realtime extra for OpenAI Realtime API support
+# API client for Anthropic Claude
 anthropic>=0.18.0
-google-generativeai>=0.3.2
-google-cloud-aiplatform>=1.38.1
 
 # Utilities
 Pillow>=10.2.0
 python-dotenv>=1.0.0
-requests>=2.31.0
 httpx>=0.26.0
 python-docx>=0.8.11
 pytesseract>=0.3.10
-redis>=5.0.1
-
-# Note: If you encounter dependency conflicts, try installing with:
-# pip install -r requirements.txt --no-deps
-# Then manually install any missing dependencies

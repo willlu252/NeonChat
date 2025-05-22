@@ -5,11 +5,10 @@ from datetime import datetime
 
 from ...services.message_service import message_service
 from ...services.api_service import api_service
-from ...services.voice_service import voice_service
 
 async def handle_text_message(websocket: WebSocket, client_id: str, data: Dict[str, Any]):
     """
-    Handle text messages sent via WebSocket.
+    Handle text messages sent via WebSocket with streaming response.
     
     Args:
         websocket: The WebSocket connection
@@ -17,32 +16,60 @@ async def handle_text_message(websocket: WebSocket, client_id: str, data: Dict[s
         data: The message data
     """
     # Create user message
-    user_message = message_service.create_user_message(data['content'])
+    user_message_content = data['content']
+    user_message = message_service.create_user_message(user_message_content)
     
     # Add message to history
     message_service.add_message(client_id, user_message)
     
-    # Get model ID from data or use default
-    model_id = data.get('model_id')  # Model from client or default from config
-    message_history = message_service.get_message_history(client_id)
+    # Get the full message history *after* adding the new user message
+    full_message_history = message_service.get_message_history(client_id)
     
-    # Process with API
-    response = await api_service.execute_openai_call(model_id, message_history, data['content'])
+    current_user_input_structured = {}
+    if full_message_history:
+        current_user_input_structured = full_message_history[-1]
     
-    # Add assistant message to history
-    message_service.add_message(client_id, response)
+    history_for_claude = []
+    if len(full_message_history) > 1:
+        history_for_claude = full_message_history[:-1]
+
+    # Process with Claude API using streaming
+    full_response_content = ""
+    first_chunk = True
     
-    # If TTS is enabled, convert the response to speech
-    if data.get('tts_enabled', False):
-        tts_response = await voice_service.text_to_speech(
-            response['content'],
-            voice=data.get('voice', 'alloy'),
-            speed=float(data.get('speed', 1.0))
-        )
-        if 'error' not in tts_response:
-            response['audio_data'] = tts_response.get('audio_data', '')
-            response['audio_format'] = tts_response.get('format', 'mp3')
-            response['type'] = 'audio_response'
-    
-    # Send response to client
-    await websocket.send_json(response)
+    async for chunk in api_service.execute_claude_call_streaming(
+        history_for_claude, 
+        current_user_input_structured 
+    ):
+        if chunk.get("type") == "text_chunk":
+            # Send streaming chunk to frontend
+            full_response_content += chunk.get("content", "")
+            await websocket.send_json({
+                "role": "assistant",
+                "content": chunk.get("content", ""),
+                "type": "text_chunk",
+                "done": False
+            })
+            
+        elif chunk.get("done") or chunk.get("type") == "error":
+            # Send final message and add to history
+            final_response = {
+                "role": "assistant",
+                "content": full_response_content if chunk.get("type") != "error" else chunk.get("content"),
+                "model": chunk.get("model", "claude-3-7-sonnet-20250219"),
+                "type": "text" if chunk.get("type") != "error" else "error",
+                "done": True
+            }
+            
+            # Add complete response to message history
+            if chunk.get("type") != "error" and full_response_content:
+                message_service.add_message(client_id, {
+                    "role": "assistant",
+                    "content": full_response_content,
+                    "model": chunk.get("model", "claude-3-7-sonnet-20250219"),
+                    "type": "text"
+                })
+            
+            # Send final completion signal
+            await websocket.send_json(final_response)
+            break

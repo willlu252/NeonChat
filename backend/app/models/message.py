@@ -8,10 +8,7 @@ class MessageType(str, Enum):
     TEXT = "text"
     IMAGE = "image"
     FILE = "file"
-    AUDIO = "audio"
     SYSTEM = "system"
-    AUDIO_RESPONSE = "audio_response"
-    REALTIME_AUDIO = "realtime_audio"
 
 class Message(BaseModel):
     """Model representing a message in the chat."""
@@ -30,10 +27,6 @@ class Message(BaseModel):
     filename: Optional[str] = None
     filetype: Optional[str] = None
     filesize: Optional[int] = None
-    
-    # Audio-specific fields
-    audio_data: Optional[str] = None
-    audio_format: Optional[str] = None
 
     class Config:
         use_enum_values = True
