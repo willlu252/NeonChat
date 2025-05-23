@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git config:*)",
+      "Bash(git push:*)",
+      "Bash(claude mcp add sequential-thinking \"npx mcp-sequentialthinking-tools\")",
+      "Bash(claude mcp add shadcn-ui \"npx shadcn-ui-mcp-server\")",
+      "Bash(claude mcp add linear:*)",
+      "Bash(claude mcp add sequential-thinking \"npx -y mcp-sequentialthinking-tools\")",
+      "Bash(claude mcp add:*)",
+      "Bash(claude --mcp-debug)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  }
+}
