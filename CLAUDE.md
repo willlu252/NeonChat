@@ -1,7 +1,7 @@
 # NeonChat - Claude Instructions
 
 ## Project Overview
-NeonChat is a web-based chat application that provides a flexible interface for interacting with various AI models. The project has a Python FastAPI backend and a Vite-powered frontend with vanilla JavaScript. Voice functionality has been removed in favor of focusing on Abacus.ai integration.
+NeonChat is a web-based chat application that provides a flexible interface for interacting with various AI models. The project has a Python FastAPI backend and a Vite-powered frontend with vanilla JavaScript.
 
 ## Architecture
 - **Backend**: FastAPI with modular architecture
@@ -46,9 +46,9 @@ cd frontend && npm install
 - Markdown rendering for responses
 
 ## Development Focus
-1. **Abacus.ai Integration**: Primary development focus for enhanced AI capabilities
-2. **Modular Architecture**: Clean separation between API, services, models, and utilities
-3. **Security**: API keys via .env files (backend) or local storage (frontend)
+1. **Modular Architecture**: Clean separation between API, services, models, and utilities
+2. **Security**: API keys via .env files (backend) or local storage (frontend)
+3. **Enhanced AI Capabilities**: Flexible architecture for integrating additional AI providers
 
 ## File Structure Notes
 - WebSocket handlers: `backend/app/api/ws/` (text_handler.py, image_handler.py, file_handler.py)
@@ -64,5 +64,5 @@ cd frontend && npm install
 ## Important Notes
 - Voice features have been completely removed
 - ffmpeg directory can be safely deleted
-- Focus on text-based interactions and Abacus.ai integration
-- Maintain existing OpenAI direct integration while expanding Abacus.ai features
+- Focus on text-based interactions and AI model integrations
+- Currently integrated with Claude 3.7 Sonnet via Anthropic API

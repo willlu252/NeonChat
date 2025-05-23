@@ -151,8 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsView = document.getElementById('settings-view');
     const projectsView = document.getElementById('projects-view');
     
-    // Sidebar toggle
-    const sidebarToggle = document.getElementById('sidebar-toggle');
+    // Sidebar elements (no longer toggle-able)
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('main');
     
@@ -244,19 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsNav.addEventListener('click', () => setActiveView('settings'));
     projectsNav.addEventListener('click', () => setActiveView('projects'));
     
-    // Sidebar toggle
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        if (sidebar.classList.contains('collapsed')) {
-            mainContent.classList.remove('ml-64');
-            mainContent.classList.add('ml-0');
-            sidebarToggle.innerHTML = '<span class="neon-text text-lg leading-none">▶</span>';
-        } else {
-            mainContent.classList.remove('ml-0');
-            mainContent.classList.add('ml-64');
-            sidebarToggle.innerHTML = '<span class="neon-text text-lg leading-none">◀</span>';
-        }
-    });
+    // Sidebar toggle functionality removed - sidebar is now static
     
     // Project functions
     function renderProjects() {

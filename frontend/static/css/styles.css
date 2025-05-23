@@ -30,27 +30,22 @@ body::before { /* Grid */
 ::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 4px; box-shadow: 0 0 5px var(--neon-blue); }
 ::-webkit-scrollbar-thumb:hover { background: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
 
-/* Sidebar */
+/* Sidebar - Static, always visible */
 .sidebar {
-  background-color: var(--darker-bg); border-right: 2px solid var(--neon-blue);
-  box-shadow: 5px 0 15px rgba(0, 240, 255, 0.2); transition: transform 0.3s ease-in-out;
-  z-index: 50; padding: 1.5rem; border-radius: 0 10px 10px 0;
-  height: 100vh; position: absolute; /* Reverted from fixed for original layout */
-  top: 0; left: 0; width: 256px; overflow-y: auto; transform: translateX(0);
+  background-color: var(--darker-bg); 
+  border-right: 2px solid var(--neon-blue);
+  box-shadow: 5px 0 15px rgba(0, 240, 255, 0.2); 
+  z-index: 50; 
+  padding: 1.5rem; 
+  height: 100vh; 
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  width: 256px; 
+  overflow-y: auto;
 }
-.sidebar.collapsed { transform: translateX(-100%); }
 
-/* Sidebar Toggle Button (Original Absolute Positioning) */
-.sidebar-toggle {
-  position: absolute; top: 10px; left: 256px; transform: translateX(-100%); margin-left: -1px;
-  width: 40px; height: 40px; background-color: var(--darker-bg); border: 1px solid var(--neon-blue);
-  border-left: none; box-shadow: 5px 0 10px rgba(0, 240, 255, 0.2); color: var(--neon-blue);
-  display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 55;
-  border-radius: 0 5px 5px 0; transition: all 0.3s;
-}
-.sidebar.collapsed + .sidebar-toggle { left: 0; transform: translateX(0); border-left: 1px solid var(--neon-blue); }
-.sidebar-toggle:hover { background-color: var(--neon-blue); color: var(--darker-bg); box-shadow: 0 0 15px var(--neon-blue); }
-.sidebar-toggle span { font-size: 1.2em; line-height: 1; } /* Style toggle icon text */
+/* Toggle functionality removed - sidebar is now static */
 
 /* Sidebar Components */
 .sidebar-header { margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--neon-blue); }
@@ -65,16 +60,17 @@ body::before { /* Grid */
 .nav-link:hover { border-color: var(--neon-pink) !important; box-shadow: 0 0 12px var(--neon-pink); background-color: rgba(255, 0, 255, 0.1) !important; }
 .nav-link.active { background-color: rgba(0, 240, 255, 0.2) !important; border-color: var(--neon-blue) !important; box-shadow: 0 0 15px var(--neon-blue); }
 
-/* Main Content Area (Fixed height, no scrolling, full width) */
+/* Main Content Area - Always offset by sidebar width */
 .main-content-revert {
-  transition: margin-left 0.3s ease; margin-left: 256px; /* Pushed by sidebar */
-  padding: 1rem; box-sizing: border-box; height: 100vh; overflow-y: hidden; /* Prevent vertical scrolling */
-  display: flex; flex-direction: column; /* Ensure proper flex layout */
+  margin-left: 256px; /* Always pushed by sidebar */
+  padding: 1rem; 
+  box-sizing: border-box; 
+  height: 100vh; 
+  overflow-y: hidden;
+  display: flex; 
+  flex-direction: column;
   width: calc(100% - 256px); /* Full width minus sidebar */
 }
-/* Adjust margin when sidebar closed */
-/* Using ~ requires sidebar and main content to share the same parent */
-.sidebar.collapsed ~ .main-content-revert { margin-left: 0; }
 
 /* Container for view content */
 .view-container-revert {
