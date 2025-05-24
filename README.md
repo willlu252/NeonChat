@@ -2,21 +2,42 @@
 
 ## Description
 
-NeonChat is a web-based chat application designed as a wrapper to interact with various Large Language Models (LLMs). Select your preferred model provider, configure your API key via the secure settings interface, and start chatting.
+NeonChat is a comprehensive web-based AI interface featuring a sleek Tron-themed design. It provides an intuitive platform for interacting with various Large Language Models (LLMs) through multiple specialized interfaces: general chat, project workspaces, and journaling with metrics tracking.
 
-This project serves as a foundation for experimenting with different AI models and is intended to be expanded with more features over time.
+This project serves as a complete AI productivity suite, designed for developers, researchers, and AI enthusiasts who want organized, context-aware interactions with AI models.
 
 ## Features
 
-* Chat interface supporting various AI models.
-* Currently supported providers: OpenAI, Google AI, Anthropic, DeepSeek, Perplexity.
-* Real-time interaction using WebSockets.
-* Conversation debugging features with audio transcription and real-time voice chat.
-* Settings page to manage API keys (stored securely in your browser's local storage).
-* Model selection capabilities.
-* Renders model responses as Markdown.
-* Secure server-side API key management using environment variables.
-* Chat history saved in local storage.
+### 🚀 Core Chat Interface
+* **Multi-AI Support**: Compatible with OpenAI, Google AI, Anthropic, DeepSeek, and Perplexity
+* **Real-time Streaming**: WebSocket-based streaming responses for instant feedback
+* **File Processing**: Upload and process images, documents, and other files
+* **Markdown Rendering**: Rich text formatting for AI responses
+* **Chat History**: Persistent conversation history with local storage
+
+### 📁 Project Workspaces
+* **Project Management**: Create, edit, and organize multiple projects
+* **File Management**: Upload and manage files per project with drag-and-drop support
+* **System Instructions**: Define custom AI behavior and context for each project
+* **Dedicated Chat**: Project-specific chat interface with full context awareness
+* **Local Persistence**: All project data stored locally (ready for backend integration)
+
+### 📊 Journal & Metrics System
+* **Daily Journaling**: Comprehensive journaling interface with AI assistance
+* **Metrics Tracking**: Track mood, energy, sleep, and other wellness indicators
+* **AI Insights**: Get AI-powered observations and reflections on entries
+* **Analytics Dashboard**: Visualize journaling data and trends over time
+
+### 🎨 Design & UX
+* **Tron Theme**: Cyberpunk-inspired neon blue/pink aesthetic
+* **Fixed Layout**: No page scrolling - all interactions within contained areas
+* **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+* **Consistent Navigation**: Unified sidebar navigation across all features
+
+### 🔒 Security & Settings
+* **Secure API Keys**: Environment variables (backend) or local storage (frontend)
+* **Firebase Authentication**: Google Sign-In integration
+* **Data Privacy**: All personal data stored locally or in your control
 
 ## Technology Stack
 
@@ -33,13 +54,13 @@ This project serves as a foundation for experimenting with different AI models a
     * *(Other dependencies listed in `backend/requirements.txt`)*
 * **Frontend:**
     * Vite (Build tool / Dev server)
-    * Alpine.js (Minimal JavaScript framework)
-    * HTMX (AJAX/WebSocket integration in HTML)
+    * Vanilla JavaScript (ES6+, modular architecture)
     * Tailwind CSS (Utility-first CSS framework)
+    * Custom CSS (Tron-themed styling)
     * Marked.js (Markdown parser)
-    * FilePond (File uploads - potentially for future features)
-    * JavaScript
-    * HTML / CSS
+    * Firebase SDK (Authentication)
+    * WebSocket API (Real-time communication)
+    * HTML5 / CSS3
     * *(Dependencies listed in `package.json`)*
 
 ## Getting Started
@@ -250,31 +271,56 @@ To add support for a new API provider:
 2. Create a new function in `api_calls.py` to handle the API calls to the new provider.
 3. Update the frontend to include the new provider in the model selection dropdown.
 
-### Conversation Debugging Features
+### Frontend Architecture
 
-The conversation debugging branch adds several new features to enhance the chat experience:
+NeonChat uses a modular frontend architecture for maintainability and feature separation:
 
-* **Audio Transcription**: Convert spoken audio to text using OpenAI's transcription API.
-* **Real-time Voice Chat**: Engage in voice conversations with AI models using OpenAI's Realtime API.
-* **Conversation Analysis**: Debug and analyze conversations for improved interaction quality.
-* **Audio Playback**: Listen to AI-generated responses with text-to-speech capabilities.
+* **Core Modules:**
+  * `app.js` - Main application logic, navigation, and chat functionality
+  * `projects.js` - Complete project management system
+  * `journal-ui.js` / `journal-api.js` - Journaling interface and API
+  * `metrics-ui.js` - Metrics tracking and analytics
+  * `auth.js` - Firebase authentication integration
 
-These features require the following dependencies:
-* FFmpeg for audio processing (included in the repository)
-* pydub for audio format conversion
-* OpenAI's Realtime API support
+* **Design System:**
+  * Custom Tron-themed CSS with neon effects
+  * Consistent component styling across all modules
+  * Fixed layout preventing page scrolling
+  * Responsive sidebar and content areas
+
+* **Data Management:**
+  * Local storage for all user data
+  * WebSocket for real-time chat communication
+  * Firebase for authentication
+  * Modular APIs ready for backend integration
 
 ### Project Structure
 
-* `backend/` - Contains all backend code
-  * `main.py` - FastAPI application entry point
-  * `api_calls.py` - Functions for making API calls to various providers
-  * `config_utils.py` - Configuration management utilities
-  * `realtime_api.py` - Handles real-time voice conversation features
-  * `file_utils.py` - Utilities for file processing
-  * `.env` - Environment variables (not in version control)
-  * `.env.example` - Example environment variables file
-* `frontend/` - Contains all frontend code
-  * `static/` - Static files (HTML, CSS, JS)
-  * `src/` - Source files for the frontend
-  * `dist/` - Built frontend files (generated)
+```
+NeonChat/
+├── backend/
+│   ├── main.py                 # FastAPI application entry point
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── routes/         # HTTP endpoints (auth, journal, metrics)
+│   │   │   └── ws/             # WebSocket handlers
+│   │   ├── services/           # Business logic layer
+│   │   ├── models/             # Data models and schemas
+│   │   └── utils/              # Utility functions
+│   ├── requirements.txt        # Backend dependencies
+│   └── .env                    # Environment variables (not in git)
+├── frontend/
+│   ├── static/
+│   │   ├── index.html         # Main application HTML
+│   │   ├── css/
+│   │   │   └── styles.css     # Tron-themed styling
+│   │   └── js/
+│   │       ├── app.js         # Core application logic
+│   │       ├── projects.js    # Project management
+│   │       ├── journal-*.js   # Journaling system
+│   │       ├── metrics-ui.js  # Metrics tracking
+│   │       └── auth.js        # Firebase authentication
+│   ├── package.json           # Frontend dependencies
+│   └── vite.config.js         # Vite configuration
+└── README.md                  # This file
+```

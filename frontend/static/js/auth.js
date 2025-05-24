@@ -1,14 +1,19 @@
-// Firebase Authentication Module for NeonChat
 
-// Firebase configuration placeholder - replace with actual values
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBbZtpKJtPsriBtvuxYVlBOzQN4c5NgWQ8",
+  authDomain: "neonchat-4ab51.firebaseapp.com",
+  projectId: "neonchat-4ab51",
+  storageBucket: "neonchat-4ab51.firebasestorage.app",
+  messagingSenderId: "828980089826",
+  appId: "1:828980089826:web:b96b9fc11eae4add4c9fbb",
+  measurementId: "G-PDDZ8JCTCT"
 };
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Track auth state
 let currentUser = null;

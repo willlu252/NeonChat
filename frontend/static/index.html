@@ -80,7 +80,7 @@
                 </section>
                 
                 <!-- Journal View -->
-                <section id="journal-view" class="content-section" style="display: none;">
+                <section id="journal-view" class="content-section journal-wide" style="display: none;">
                     <div class="journal-view-container">
                         <div class="journal-tabs">
                             <button class="journal-tab active" data-view="entries">
@@ -165,15 +165,104 @@
                 </section>
                 
                 <!-- Projects View -->
-                <section id="projects-view" class="content-section" style="display: none;">
-                    <div class="projects-header">Projects</div>
-                    <div class="mb-4">
-                        <button id="create-project-btn" class="tron-button">Create New Project</button>
-                    </div>
-                    
-                    <div id="projects-list" class="projects-list">
-                        <div class="text-center py-8">
-                            <p class="text-gray-500">No projects yet. Create your first project to get started!</p>
+                <section id="projects-view" class="content-section projects-wide" style="display: none;">
+                    <div class="projects-view-container">
+                        <!-- Projects List View -->
+                        <div id="projects-list-view" class="projects-list-view">
+                            <div class="projects-header">Projects</div>
+                            <div class="mb-4">
+                                <button id="create-project-btn" class="tron-button">Create New Project</button>
+                            </div>
+                            
+                            <div id="projects-list" class="projects-list">
+                                <div class="text-center py-8">
+                                    <p class="text-gray-500">No projects yet. Create your first project to get started!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Workspace View -->
+                        <div id="project-workspace-view" class="project-workspace-view">
+                            <div class="projects-workspace">
+
+                                <!-- Main Chat Area -->
+                                <div class="projects-main">
+                                    <div class="project-workspace-container">
+
+                                        <!-- Project Chat Canvas -->
+                                        <div class="project-chat-canvas">
+                                            <div id="project-chat-messages" class="project-chat-messages">
+                                                <div class="message message-system">
+                                                    Welcome to your project workspace! I have access to your project context and uploaded files.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Project Chat HUD -->
+                                        <div class="project-hud">
+                                            <div class="chat-hud-container">
+                                                <div id="project-image-preview" class="image-preview hidden mb-3">
+                                                    <img id="project-preview-image" src="" alt="Image preview">
+                                                    <div class="image-preview-controls mt-2">
+                                                        <button id="clear-project-image" class="clear-image">Remove</button>
+                                                    </div>
+                                                </div>
+                                                <div class="input-area">
+                                                    <div class="input-buttons">
+                                                        <label for="project-file-input-chat" class="attachment-btn">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                                            </svg>
+                                                        </label>
+                                                        <input type="file" id="project-file-input-chat" hidden>
+                                                    </div>
+                                                    
+                                                    <textarea id="project-chat-input" name="project-chat-input" class="chat-input" rows="1" placeholder="Chat about your project..."></textarea>
+                                                    <button id="project-send-button" class="send-btn">Send</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Sidebar: Files & System Instructions -->
+                                <div class="projects-right-sidebar">
+                                    <!-- System Instructions Section -->
+                                    <div class="project-system-section">
+                                        <div class="project-files-header">
+                                            <i class="fas fa-cog mr-2"></i>
+                                            System Instructions
+                                            <button id="edit-system-prompt" class="tron-button-secondary text-xs ml-auto">Edit</button>
+                                        </div>
+                                        <div class="system-prompt-container">
+                                            <div id="system-prompt-display" class="system-prompt-text system-prompt-empty">
+                                                No system instructions set. Click Edit to add instructions.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- File Management Section -->
+                                    <div class="project-files-section">
+                                        <div class="project-files-header">
+                                            <i class="fas fa-folder mr-2"></i>
+                                            Project Files
+                                        </div>
+                                        
+                                        <!-- File Upload Area -->
+                                        <div class="file-upload-area" id="file-upload-area">
+                                            <input type="file" id="project-file-input" multiple hidden>
+                                            <i class="fas fa-cloud-upload-alt text-2xl text-neon-blue mb-2"></i>
+                                            <p class="text-sm text-gray-300">Drop files here or click to upload</p>
+                                            <p class="text-xs text-gray-500 mt-1">Supports documents, images, and text files</p>
+                                        </div>
+
+                                        <!-- Files List -->
+                                        <div id="project-files-list" class="project-files-list">
+                                            <!-- Files will be dynamically added here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -194,26 +283,44 @@
         </div>
         
         <!-- Project Form Modal -->
-        <div id="project-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-75 flex items-center justify-center" style="display: none;">
-            <div class="bg-darker-bg rounded-lg neon-border p-6 max-w-md w-full text-tron-white">
-                <h3 id="project-modal-title" class="text-xl font-bold text-neon-blue mb-4">Create New Project</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label>Name</label>
-                        <input id="project-name" class="tron-input">
+        <div id="project-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="project-modal-title">Create New Project</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="project-name">Project Name</label>
+                        <input id="project-name" class="tron-input w-full" type="text" placeholder="Enter project name">
                     </div>
-                    <div>
-                        <label>Desc</label>
-                        <textarea id="project-description" class="tron-input" rows="3"></textarea>
+                    <div class="form-group">
+                        <label class="form-label" for="project-description">Description</label>
+                        <textarea id="project-description" class="tron-input w-full" rows="4" placeholder="Describe your project and its purpose"></textarea>
                     </div>
-                    <div>
-                        <label>Rules</label>
-                        <textarea id="project-rules" class="tron-input" rows="5"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-project-btn" class="tron-button-secondary">Cancel</button>
+                    <button id="save-project-btn" class="tron-button">Save Project</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Instructions Modal -->
+        <div id="system-instructions-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit System Instructions</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="system-instructions-input">System Instructions</label>
+                        <textarea id="system-instructions-input" class="tron-input w-full" rows="10" placeholder="Enter specific instructions that will guide Claude when working on this project..."></textarea>
+                        <small class="text-gray-500 mt-1 block">These instructions will be used as context for all conversations in this project.</small>
                     </div>
-                    <div class="flex justify-end space-x-2">
-                        <button id="cancel-project-btn" class="tron-button-secondary">Cancel</button>
-                        <button id="save-project-btn" class="tron-button">Save Project</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-system-instructions-btn" class="tron-button-secondary">Cancel</button>
+                    <button id="save-system-instructions-btn" class="tron-button">Save Instructions</button>
                 </div>
             </div>
         </div>
@@ -223,5 +330,6 @@
     <script src="./js/journal-api.js"></script>
     <script src="./js/journal-ui.js"></script>
     <script src="./js/metrics-ui.js"></script>
+    <script src="./js/projects.js" defer></script>
 </body>
 </html>

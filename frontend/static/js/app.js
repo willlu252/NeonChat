@@ -114,7 +114,7 @@ function autoResizeInput() {
     if (!this || typeof this.scrollHeight === 'undefined') return; 
     this.style.height = 'auto'; 
     const newHeight = this.scrollHeight; 
-    const minHeight = 40; 
+    const minHeight = 68; // Increased to match CSS min-height for 2.5 lines
     const maxHeight = 150;
     
     // Set the height within min and max constraints
@@ -183,8 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Current selected image (if any)
     let currentImage = null;
-    let editingProjectIndex = null;
-    let projects = [];
     
     // Function to handle pasted image data
     function handlePastedImage(pasteEvent) {
@@ -209,17 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-    }
-    
-    // Load projects from localStorage
-    try {
-        const savedProjects = localStorage.getItem('tron_projects');
-        if (savedProjects) {
-            projects = JSON.parse(savedProjects);
-            renderProjects();
-        }
-    } catch (e) {
-        console.error("app.js: Error loading projects:", e);
     }
     
     // Navigation handling
@@ -253,6 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize journal view if needed
             if (sectionId === 'journal' && window.journalUI) {
                 window.journalUI.show();
+            }
+            
+            // Initialize projects view if needed
+            if (sectionId === 'projects') {
+                setTimeout(() => {
+                    initializeProjectsView();
+                }, 100);
             }
         }
     }
@@ -335,128 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Project functions
-    function renderProjects() {
-        if (projects.length === 0) {
-            projectsList.innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-gray-500">No projects yet. Create your first project to get started!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        projectsList.innerHTML = '';
-        projects.forEach((project, index) => {
-            const projectCard = document.createElement('div');
-            projectCard.className = 'project-card mb-4 p-4 border border-neon-blue rounded-lg bg-darker-bg';
-            projectCard.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <h3 class="text-lg font-bold text-neon-blue">${project.name}</h3>
-                    <div class="flex space-x-2">
-                        <button class="edit-project text-neon-blue hover:text-neon-pink" data-index="${index}">Edit</button>
-                        <button class="delete-project text-red-500 hover:text-red-300" data-index="${index}">Delete</button>
-                    </div>
-                </div>
-                <p class="mt-2 text-sm">${project.description || 'No description'}</p>
-                <div class="mt-3 text-xs text-gray-400">
-                    <span>Created: <span>${new Date(project.createdAt).toLocaleString()}</span></span>
-                    <span class="ml-3">Updated: <span>${new Date(project.updatedAt).toLocaleString()}</span></span>
-                </div>
-            `;
-            projectsList.appendChild(projectCard);
-            
-            // Add event listeners to edit and delete buttons
-            projectCard.querySelector('.edit-project').addEventListener('click', () => editProject(index));
-            projectCard.querySelector('.delete-project').addEventListener('click', () => deleteProject(index));
-        });
-    }
-    
-    function editProject(index) {
-        if (index >= 0 && index < projects.length) {
-            const project = projects[index];
-            projectName.value = project.name;
-            projectDescription.value = project.description || '';
-            projectRules.value = project.rules || '';
-            editingProjectIndex = index;
-            document.getElementById('project-modal-title').textContent = 'Edit Project';
-            document.getElementById('save-project-btn').textContent = 'Update Project';
-            projectModal.style.display = 'flex';
+    // Project functionality is now handled by projects.js
+    // Initialize projects when the view is shown
+    function initializeProjectsView() {
+        if (window.projectsManager) {
+            window.projectsManager.renderProjectsList();
         }
     }
-    
-    function deleteProject(index) {
-        if (index >= 0 && index < projects.length) {
-            if (confirm('Are you sure you want to delete "' + projects[index].name + '"?')) {
-                projects.splice(index, 1);
-                localStorage.setItem('tron_projects', JSON.stringify(projects));
-                renderProjects();
-            }
-        }
-    }
-    
-    function saveProject() {
-        if (!projectName.value.trim()) {
-            alert('Project name is required');
-            return;
-        }
-        
-        const project = {
-            id: Date.now().toString(),
-            name: projectName.value.trim(),
-            description: projectDescription.value.trim(),
-            rules: projectRules.value.trim(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        
-        if (editingProjectIndex !== null) {
-            // Update existing project
-            project.id = projects[editingProjectIndex].id;
-            project.createdAt = projects[editingProjectIndex].createdAt;
-            projects[editingProjectIndex] = project;
-        } else {
-            // Add new project
-            projects.push(project);
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('tron_projects', JSON.stringify(projects));
-        
-        // Reset form and close modal
-        projectName.value = '';
-        projectDescription.value = '';
-        projectRules.value = '';
-        editingProjectIndex = null;
-        projectModal.style.display = 'none';
-        
-        // Update projects list
-        renderProjects();
-    }
-    
-    // Project event listeners
-    createProjectBtn.addEventListener('click', () => {
-        projectName.value = '';
-        projectDescription.value = '';
-        projectRules.value = '';
-        editingProjectIndex = null;
-        document.getElementById('project-modal-title').textContent = 'Create New Project';
-        document.getElementById('save-project-btn').textContent = 'Save Project';
-        projectModal.style.display = 'flex';
-    });
-    
-    saveProjectBtn.addEventListener('click', saveProject);
-    
-    cancelProjectBtn.addEventListener('click', () => {
-        projectModal.style.display = 'none';
-    });
-    
-    // Close modal when clicking outside
-    projectModal.addEventListener('click', (e) => {
-        if (e.target === projectModal) {
-            projectModal.style.display = 'none';
-        }
-    });
 
     // WebSocket setup
     window.chatSocket = null;
