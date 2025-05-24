@@ -1,0 +1,271 @@
+NeonChat Backend Projects Feature: Technical Specification for LLM Implementation
+1. Introduction
+This document outlines the backend technical specifications for the "Projects" feature in the NeonChat application. It is intended to guide an LLM coder in implementing the necessary FastAPI services, API endpoints, data models, and interactions with Obsidian and Firebase Storage.
+Core Technologies:
+Framework: Python FastAPI
+AI Model: Anthropic Claude (via API)
+Primary Data Store (Project Config & Chat Logs): Obsidian (accessed via Local REST API plugin)
+File Storage (Project Documents): Firebase Storage
+Authentication: Firebase Authentication (ID token verification)
+Guiding Principles for Implementation:
+Modular Design: Services and routes should be organized logically.
+Security: All project-related endpoints must be authenticated and user-scoped.
+Obsidian-centric: Project configurations and chat logs should be stored as Markdown files in Obsidian to leverage its linking and organizational capabilities.
+Clear API Contracts: Well-defined Pydantic models for request and response bodies.
+Asynchronous Operations: Utilize async and await for I/O-bound operations (API calls, file interactions).
+2. Data Models (Pydantic)
+Define these models in a new file, e.g., backend/app/models/project.py.
+# backend/app/models/project.py
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+import uuid
+
+class ProjectFileBase(BaseModel):
+    name: str
+    type: str # MIME type
+    size: int # in bytes
+    url: str # URL in Firebase Storage
+
+class ProjectFileResponse(ProjectFileBase):
+    id: str # Could be Firebase Storage path or a UUID
+    uploaded_at: datetime
+
+class ProjectBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    system_prompt: Optional[str] = None # System prompt for AI in this project's context
+
+class ProjectCreate(ProjectBase):
+    pass
+
+class ProjectUpdate(ProjectBase):
+    name: Optional[str] = None # Allow partial updates
+
+class ProjectResponse(ProjectBase):
+    id: str # Unique project identifier (e.g., name of the Obsidian note or a UUID)
+    user_id: str # Identifier for the owner
+    created_at: datetime
+    updated_at: datetime
+    files: List[ProjectFileResponse] = [] # List of associated files
+    obsidian_note_path: str # Path to the main project note in Obsidian
+
+# For WebSocket messages related to project chat
+class ProjectChatMessage(BaseModel):
+    type: str = "text" # or 'image', 'file'
+    role: str # 'user'
+    content: Any
+    project_id: str
+    # Optional: caption, filename, filetype, filesize if applicable
+    caption: Optional[str] = None
+    filename: Optional[str] = None
+    filetype: Optional[str] = None
+    filesize: Optional[int] = None
+    model_id: Optional[str] = "claude-3-7-sonnet-20250219" # Default model
+    provider: Optional[str] = "Claude"
+
+
+3. API Endpoints (FastAPI)
+Create a new router, e.g., backend/app/api/routes/projects.py. All endpoints require authentication.
+3.1. Project Management Endpoints:
+POST /api/projects
+Request Body: ProjectCreate
+Response Body: ProjectResponse
+Action:
+Validate input.
+Generate a unique project ID (e.g., slugified name or UUID).
+Create a new Markdown note in the user's Obsidian vault (e.g., Vault/Projects/{project_id}.md or Vault/Projects/{project_name}.md).
+The note's frontmatter should store description, system_prompt, created_at, updated_at, user_id, and an empty list for files.
+Return the created project details, including the obsidian_note_path.
+GET /api/projects
+Response Body: List[ProjectResponse]
+Action:
+List all .md files in the user's Vault/Projects/ directory in Obsidian.
+For each file, parse its frontmatter to construct ProjectResponse objects.
+Return the list of projects.
+GET /api/projects/{project_id}
+Response Body: ProjectResponse
+Action:
+Construct the path to the project's Obsidian note based on project_id.
+Read the note and its frontmatter.
+Return the project details.
+If not found, return 404.
+PUT /api/projects/{project_id}
+Request Body: ProjectUpdate
+Response Body: ProjectResponse
+Action:
+Read the existing project note from Obsidian.
+Update its frontmatter with the provided fields (name, description, system_prompt). Update updated_at.
+If the name changes, the Obsidian note filename might need to be renamed (consider implications for links). It might be safer to use a UUID as project_id and keep the filename stable or derived from the ID.
+Save the updated note.
+Return the updated project details.
+DELETE /api/projects/{project_id}
+Response Status: 204 No Content or success message.
+Action:
+Delete the project's Markdown note from Obsidian.
+Delete all associated files from Firebase Storage (iterate through the file list in the project note's frontmatter).
+Delete any associated project chat logs from Obsidian.
+3.2. Project File Management Endpoints:
+POST /api/projects/{project_id}/files
+Request: UploadFile (FastAPI's file upload type). Expects file data.
+Response Body: ProjectFileResponse
+Action:
+Verify the project exists.
+Upload the received file to Firebase Storage under users/{user_id}/projects/{project_id}/files/{original_filename_or_uuid}.
+Generate a unique ID for the file (e.g., UUID or use the storage path).
+Update the project's Obsidian note: add an entry to the files list in its frontmatter (containing id, name, type, size, url, uploaded_at).
+Return the details of the uploaded file.
+GET /api/projects/{project_id}/files
+Response Body: List[ProjectFileResponse]
+Action:
+Read the project's Obsidian note.
+Return the files list from its frontmatter.
+DELETE /api/projects/{project_id}/files/{file_id}
+Response Status: 204 No Content or success message.
+Action:
+Read the project's Obsidian note.
+Find the file with file_id in the files list.
+Delete the file from Firebase Storage using its stored URL or path.
+Remove the file entry from the files list in the project note's frontmatter.
+Save the updated project note.
+4. Core Services & Logic
+4.1. ProjectService (e.g., backend/app/services/project_service.py - new file):
+* Contains the business logic for all project and project file operations.
+* Interacts with ObsidianService to read/write project .md files.
+* Interacts with FirebaseService to manage file uploads/deletions in Firebase Storage.
+* Handles parsing and updating frontmatter of project notes.
+* Key methods:
+* async def create_project(user_id: str, project_data: ProjectCreate) -> ProjectResponse:
+* async def get_projects(user_id: str) -> List[ProjectResponse]:
+* async def get_project(user_id: str, project_id: str) -> Optional[ProjectResponse]:
+* async def update_project(user_id: str, project_id: str, project_data: ProjectUpdate) -> Optional[ProjectResponse]:
+* async def delete_project(user_id: str, project_id: str) -> bool:
+* async def add_file_to_project(user_id: str, project_id: str, file_data: UploadFile) -> Optional[ProjectFileResponse]:
+* async def get_project_files(user_id: str, project_id: str) -> List[ProjectFileResponse]:
+* async def delete_project_file(user_id: str, project_id: str, file_id: str) -> bool:
+* async def get_project_context_for_chat(user_id: str, project_id: str) -> Dict[str, Any]: (Returns system_prompt, file manifest, etc.)
+* async def save_project_chat_log(user_id: str, project_id: str, chat_history: List[Dict]) -> str: (Returns path to saved chat log note).
+4.2. ObsidianService (e.g., backend/app/services/obsidian_service.py - new or extended):
+* Abstracts interactions with the Obsidian Local REST API.
+* Key methods:
+* async def read_note(user_id: str, note_path: str) -> Optional[Dict[str, Any]]: (Returns content and parsed frontmatter).
+* async def write_note(user_id: str, note_path: str, content: str, frontmatter: Dict[str, Any]) -> bool:
+* async def list_notes_in_directory(user_id: str, dir_path: str) -> List[Dict[str, str]]: (Returns list of {name, path}).
+* async def delete_note(user_id: str, note_path: str) -> bool:
+* async def rename_note(user_id: str, old_path: str, new_path: str) -> bool: (If project renaming changes filename).
+* async def append_to_note(user_id: str, note_path: str, content_to_append: str) -> bool:
+* Security Note: The ObsidianService must securely manage the API key for the user's Obsidian instance (or a shared one if single-tenant initially). If multi-tenant, each user might have their Obsidian instance details stored securely. For now, assume a single API key configured in the backend's environment for the hosted Obsidian.
+4.3. FirebaseService (e.g., backend/app/services/firebase_service.py - new or extended):
+* Handles Firebase Storage interactions.
+* Key methods:
+* async def upload_file(user_id: str, project_id: str, filename: str, file_content: bytes, content_type: str) -> str: (Returns public URL or storage path).
+* async def delete_file(storage_path: str) -> bool:
+* Handles Firebase Authentication ID token verification.
+* async def verify_firebase_token(token: str) -> Optional[Dict[str, Any]]: (Returns user claims or None).
+4.4. AnthropicService (api_service.py modifications):
+* The execute_claude_call_streaming method needs to be adaptable:
+* Accept an optional system_prompt parameter. If provided, this should be prepended to the messages list sent to Claude, formatted as a user message if Claude API expects system prompts that way, or using the dedicated system prompt field if available in the API version.
+* When projectId is present in a chat request, the ProjectService will fetch the project's system prompt and file manifest. This context will be used to augment the messages or system prompt sent to Claude.
+4.5. WebSocket Handler (text_handler.py or new project_chat_handler.py):
+* Modify the existing WebSocket message handling logic.
+* If an incoming message (from handle_text_message) contains a project_id field:
+1. Call ProjectService.get_project_context_for_chat(user_id, project_id) to retrieve the project's system_prompt and a manifest of its files.
+2. Augment the message_history or user_input sent to api_service.execute_claude_call_streaming with this project-specific context.
+* The system_prompt should guide Claude on its role within this project.
+* The file manifest could be a list of filenames/descriptions that Claude can refer to or be instructed to "read" (future tool use).
+3. After the chat interaction, the resulting conversation transcript (user messages and AI responses) should be passed to ProjectService.save_project_chat_log.
+5. Data Storage in Obsidian
+Project Configuration Notes:
+Stored in: Vault/Projects/{project_id}.md (or Vault/Projects/{sanitized_project_name}.md). Using a UUID for {project_id} is safer for stable linking if names can change.
+Frontmatter Example:
+---
+id: "uuid-for-project"
+name: "My Awesome Project"
+description: "A project to do awesome things."
+system_prompt: "You are an AI assistant helping with 'My Awesome Project'. Refer to uploaded files by their name. Be concise."
+created_at: "YYYY-MM-DDTHH:MM:SSZ"
+updated_at: "YYYY-MM-DDTHH:MM:SSZ"
+user_id: "firebase-user-uid"
+files:
+  - id: "uuid-for-file1"
+    name: "requirements.docx"
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    size: 12345
+    url: "https://firebasestorage.googleapis.com/..."
+    uploaded_at: "YYYY-MM-DDTHH:MM:SSZ"
+  - id: "uuid-for-file2"
+    name: "design_spec.pdf"
+    type: "application/pdf"
+    size: 67890
+    url: "https://firebasestorage.googleapis.com/..."
+    uploaded_at: "YYYY-MM-DDTHH:MM:SSZ"
+---
+
+
+The body of this note can be used for user's manual notes about the project, or could list files with [[wikilinks]] if preferred over frontmatter for file lists.
+Project Chat Logs:
+Stored in: Vault/Projects/{project_id}/Chat_Logs/{YYYY-MM-DD_HHMMSS_chat.md} or appended to Vault/Projects/{project_id}/Chat_Log.md.
+Content Example:
+---
+project_id: "uuid-for-project"
+session_started: "YYYY-MM-DDTHH:MM:SSZ"
+summary: "Discussed initial requirements and design ideas."
+tags: [chat, project-planning, requirements]
+---
+
+# Chat Log for My Awesome Project - YYYY-MM-DD
+
+**User:** Can you summarize the main points from `[[requirements.docx]]`?
+
+**Claude:** Based on `[[requirements.docx]]`, the key requirements are X, Y, and Z. We should also consider the constraints mentioned in `[[design_spec.pdf]]`.
+
+... more conversation ...
+
+
+The backend (guided by Claude) should format these logs, including summaries and [[wikilinks]] to project files or other relevant notes.
+6. Staged Implementation Plan (Backend - Projects Feature)
+Stage B1: Project Models and Basic CRUD Service Logic (Obsidian Interaction)
+* Implement Pydantic models: ProjectBase, ProjectCreate, ProjectUpdate, ProjectResponse, ProjectFileBase, ProjectFileResponse.
+* Implement ObsidianService methods for reading, writing, listing, and deleting Markdown notes, focusing on manipulating frontmatter.
+* Implement ProjectService methods for create_project, get_project (by ID/path), get_projects (list all), update_project, delete_project. These methods will use ObsidianService to manage project .md files in a dedicated Projects directory in the vault. Project metadata (name, description, system_prompt, file list) will be stored in the frontmatter of these notes.
+* Focus: Core logic of representing and managing project metadata as Obsidian notes. No API endpoints yet. Unit tests for these services.
+Stage B2: Project API Endpoints
+* Create backend/app/api/routes/projects.py.
+* Implement the FastAPI endpoints: POST /projects, GET /projects, GET /projects/{project_id}, PUT /projects/{project_id}, DELETE /projects/{project_id}.
+* These endpoints will use the ProjectService methods from Stage B1.
+* Integrate Firebase authentication: Ensure all endpoints are protected and user_id is extracted from the token. All operations should be scoped to the authenticated user.
+* Focus: Exposing project CRUD functionality via a secure API. Test with tools like Postman or curl.
+Stage B3: Project File Management (Firebase Storage & Obsidian Update)
+* Extend FirebaseService for file upload to and deletion from Firebase Storage. Ensure files are stored in a user-specific and project-specific path (e.g., users/{user_id}/projects/{project_id}/files/).
+* Extend ProjectService:
+* add_file_to_project: Uploads file via FirebaseService, then updates the corresponding project's Obsidian note (frontmatter files list) with file metadata (name, type, size, Firebase URL, internal file ID) via ObsidianService.
+* get_project_files: Reads the files list from the project note's frontmatter.
+* delete_project_file: Deletes file from Firebase Storage via FirebaseService and removes its entry from the project note's frontmatter via ObsidianService.
+* Implement API endpoints: POST /projects/{project_id}/files, GET /projects/{project_id}/files, DELETE /projects/{project_id}/files/{file_id}.
+* Focus: Integrating file storage with project metadata in Obsidian.
+Stage B4: Project-Contextualised Chat (WebSocket & Claude Integration)
+* Modify the existing WebSocket handler (text_handler.py) or create a dedicated one for project chats.
+* When a WebSocket message includes a project_id:
+* The handler should call ProjectService.get_project_context_for_chat(user_id, project_id). This service method will read the project's .md note from Obsidian to fetch its system_prompt and the list of associated files (names, URLs, types).
+* The system_prompt from the project note should be prepended to the message history sent to Claude.
+* The list of project files (e.g., "Files available in this project: report.pdf, data.csv") should be included in the context for Claude, perhaps as part of the system prompt or an initial user message.
+* Update AnthropicService (api_service.py) so execute_claude_call_streaming can correctly incorporate the project-specific system prompt and file context when making the call to Claude.
+* Focus: Enabling Claude to "know" it's in a project context and have access to the project's defined system prompt and file list.
+Stage B5: Storing Project Chat Memory in Obsidian
+* Implement ProjectService.save_project_chat_log. This method will:
+* Take the user_id, project_id, and the chat_history (list of user/assistant messages for the session).
+* Instruct Claude (via a separate utility call to AnthropicService or by adding a final "meta-prompt" to the chat itself) to:
+* Generate a brief summary of the chat session.
+* Identify key entities or topics discussed.
+* Identify any [[wikilinks]] that should be made to project files or other notes.
+* Format the chat transcript, summary, and extracted metadata into a Markdown string.
+* Use ObsidianService to save this as a new note in Vault/Projects/{project_id}/Chat_Logs/{timestamp}_log.md (or append to a running log). The note should link back to the main project note.
+* The WebSocket handler, after a project chat stream concludes (or periodically), should call save_project_chat_log.
+* Focus: Persisting project-specific conversations in Obsidian in a structured and interlinked way.
+Stage B6: Testing and Refinement
+* Thoroughly test all project-related API endpoints and WebSocket interactions.
+* Verify correct file handling in Firebase Storage and metadata updates in Obsidian.
+* Ensure project-specific context is correctly passed to and utilized by Claude.
+* Test chat log saving and linking within Obsidian.
+* Review error handling and security considerations.
+This staged backend plan complements the frontend specification, providing a roadmap for building the "Projects" feature.

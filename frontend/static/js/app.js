@@ -1,3 +1,12 @@
+// Import auth functions
+import { 
+    signInWithGoogle, 
+    signOutUser, 
+    onAuthStateChangedListener, 
+    getCurrentUser,
+    getIdToken 
+} from './auth.js';
+
 // Use a script tag for marked in the HTML instead of import
 let marked;
 if (window.marked) {
@@ -142,14 +151,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearHistoryButton = document.getElementById('clear-history-button');
     
     // Navigation elements
-    const chatNav = document.getElementById('chat-nav');
-    const settingsNav = document.getElementById('settings-nav');
-    const projectsNav = document.getElementById('projects-nav');
+    const navLinks = document.querySelectorAll('.nav-link[data-section]');
     
     // View elements
     const chatView = document.getElementById('chat-view');
+    const journalView = document.getElementById('journal-view');
     const settingsView = document.getElementById('settings-view');
     const projectsView = document.getElementById('projects-view');
+    
+    // Auth elements
+    const signInButton = document.getElementById('sign-in-button');
+    const signOutButton = document.getElementById('sign-out-button');
+    const signInContainer = document.getElementById('sign-in-container');
+    const userInfoContainer = document.getElementById('user-info-container');
+    const userAvatar = document.getElementById('user-avatar');
+    const userName = document.getElementById('user-name');
     
     // Sidebar elements (no longer toggle-able)
     const sidebar = document.querySelector('.sidebar');
@@ -207,31 +223,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Navigation handling
-    function setActiveView(view) {
+    function setActiveView(sectionId) {
         // Hide all views
-        chatView.style.display = 'none';
-        settingsView.style.display = 'none';
-        projectsView.style.display = 'none';
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.style.display = 'none';
+            section.classList.remove('active');
+        });
         
-        // Remove active class from all nav buttons
-        chatNav.classList.remove('active');
-        settingsNav.classList.remove('active');
-        projectsNav.classList.remove('active');
+        // Remove active class from all nav links
+        navLinks.forEach(link => link.classList.remove('active'));
         
-        // Show selected view and set active nav button
-        switch (view) {
-            case 'chat':
-                chatView.style.display = 'flex';
-                chatNav.classList.add('active');
-                break;
-            case 'settings':
-                settingsView.style.display = 'block';
-                settingsNav.classList.add('active');
-                break;
-            case 'projects':
-                projectsView.style.display = 'block';
-                projectsNav.classList.add('active');
-                break;
+        // Show selected view
+        const targetView = document.getElementById(sectionId + '-view');
+        if (targetView) {
+            // Set appropriate display based on section
+            if (sectionId === 'chat') {
+                targetView.style.display = 'flex';
+            } else {
+                targetView.style.display = 'block';
+            }
+            targetView.classList.add('active');
+            
+            // Set active nav link
+            const activeNav = document.querySelector(`[data-section="${sectionId}"]`);
+            if (activeNav) {
+                activeNav.classList.add('active');
+            }
+            
+            // Initialize journal view if needed
+            if (sectionId === 'journal' && window.journalUI) {
+                window.journalUI.show();
+            }
         }
     }
     
@@ -239,11 +261,79 @@ document.addEventListener('DOMContentLoaded', () => {
     setActiveView('chat');
     
     // Navigation event listeners
-    chatNav.addEventListener('click', () => setActiveView('chat'));
-    settingsNav.addEventListener('click', () => setActiveView('settings'));
-    projectsNav.addEventListener('click', () => setActiveView('projects'));
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const section = e.target.getAttribute('data-section');
+            if (section) {
+                setActiveView(section);
+            }
+        });
+    });
     
-    // Sidebar toggle functionality removed - sidebar is now static
+    // Authentication functionality
+    function updateAuthUI(user) {
+        if (user) {
+            // User is signed in
+            signInContainer.style.display = 'none';
+            userInfoContainer.classList.remove('hidden');
+            
+            // Update user info
+            userName.textContent = user.displayName || user.email || 'User';
+            userAvatar.src = user.photoURL || 'https://via.placeholder.com/32';
+            userAvatar.alt = user.displayName || 'User';
+            
+            console.log('User signed in:', user.email);
+        } else {
+            // User is signed out
+            signInContainer.style.display = 'block';
+            userInfoContainer.classList.add('hidden');
+            
+            console.log('User signed out');
+        }
+    }
+    
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChangedListener((user) => {
+        updateAuthUI(user);
+    });
+    
+    // Sign in button click handler
+    if (signInButton) {
+        signInButton.addEventListener('click', async () => {
+            try {
+                signInButton.disabled = true;
+                signInButton.textContent = 'Signing in...';
+                
+                const user = await signInWithGoogle();
+                console.log('Sign-in successful:', user);
+            } catch (error) {
+                console.error('Sign-in error:', error);
+                alert('Failed to sign in. Please try again.');
+            } finally {
+                signInButton.disabled = false;
+                signInButton.textContent = 'Sign In with Google';
+            }
+        });
+    }
+    
+    // Sign out button click handler
+    if (signOutButton) {
+        signOutButton.addEventListener('click', async () => {
+            try {
+                signOutButton.disabled = true;
+                signOutButton.textContent = 'Signing out...';
+                
+                await signOutUser();
+                console.log('Sign-out successful');
+            } catch (error) {
+                console.error('Sign-out error:', error);
+                alert('Failed to sign out. Please try again.');
+            } finally {
+                signOutButton.disabled = false;
+                signOutButton.textContent = 'Sign Out';
+            }
+        });
+    }
     
     // Project functions
     function renderProjects() {
@@ -756,6 +846,30 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("app.js: Error loading chat history:", e);
     }
+    
+    // Journal tab navigation
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.journal-tab')) {
+            const btn = e.target.closest('.journal-tab');
+            const view = btn.getAttribute('data-view');
+            
+            // Update active state
+            document.querySelectorAll('.journal-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Show appropriate view
+            if (view === 'entries' && window.journalUI) {
+                window.journalUI.show();
+                window.metricsUI?.hide();
+            } else if (view === 'metrics' && window.metricsUI) {
+                window.metricsUI.show();
+                window.journalUI?.hide();
+            } else if (view === 'insights' && window.metricsUI) {
+                window.metricsUI.showInsights();
+                window.journalUI?.hide();
+            }
+        }
+    });
 
 }); // End DOMContentLoaded
 

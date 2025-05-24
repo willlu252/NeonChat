@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Chat - Anthropic's Advanced AI Assistant</title>
+    <title>NeonChat - AI-Powered Journal & Project System</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="./js/app.js" defer></script>
+    <script src="./js/app.js" type="module" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./css/styles.css">
-</head>
+    <link rel="stylesheet" href="./css/journal-metrics.css">
 <body class="bg-dark-bg text-tron-white min-h-screen">
     <div class="fixed inset-0 bg-tron-grid bg-tron-grid-size opacity-30 pointer-events-none z-[-1]"></div>
 
@@ -16,24 +17,38 @@
         <div class="relative h-full">
             <div class="sidebar">
                 <div class="sidebar-header mb-6">
-                    <h1 class="text-xl font-bold neon-text">Claude Chat</h1>
+                    <h1 class="text-xl font-bold neon-text">NeonChat</h1>
                     <div class="border-b border-neon-blue my-2"></div>
+                    <!-- Auth Status -->
+                    <div id="auth-status" class="mt-4">
+                        <div id="sign-in-container" class="text-center">
+                            <button id="sign-in-button" class="tron-button w-full">Sign In with Google</button>
+                        </div>
+                        <div id="user-info-container" class="hidden">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <img id="user-avatar" src="" alt="User" class="w-8 h-8 rounded-full">
+                                <span id="user-name" class="text-sm text-tron-white"></span>
+                            </div>
+                            <button id="sign-out-button" class="tron-button-secondary w-full text-sm">Sign Out</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="navigation">
                     <h2 class="text-lg font-semibold mb-2">Navigation</h2>
                     <div class="space-y-2">
-                        <button id="chat-nav" class="nav-link active">Chat</button>
-                        <button id="settings-nav" class="nav-link">Settings</button>
-                        <button id="projects-nav" class="nav-link">Projects</button>
+                        <button data-section="chat" class="nav-link active">Chat</button>
+                        <button data-section="journal" class="nav-link">Journal</button>
+                        <button data-section="projects" class="nav-link">Projects</button>
+                        <button data-section="settings" class="nav-link">Settings</button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <main class="main-content-revert absolute top-0 left-0 right-0 bottom-0">
+        <main class="main-content-revert">
             <div class="view-container-revert">
                 <!-- Chat View -->
-                <div id="chat-view" class="chat-view-wrapper-revert">
+                <section id="chat-view" class="content-section active">
                     <div class="chat-canvas-revert">
                         <div id="chat-messages" class="space-y-4">
                         </div>
@@ -62,10 +77,35 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
+                
+                <!-- Journal View -->
+                <section id="journal-view" class="content-section" style="display: none;">
+                    <div class="journal-view-container">
+                        <div class="journal-tabs">
+                            <button class="journal-tab active" data-view="entries">
+                                <i class="fas fa-book"></i> Entries
+                            </button>
+                            <button class="journal-tab" data-view="metrics">
+                                <i class="fas fa-chart-line"></i> Metrics
+                            </button>
+                            <button class="journal-tab" data-view="insights">
+                                <i class="fas fa-lightbulb"></i> Insights
+                            </button>
+                        </div>
+                        <div class="journal-content-area">
+                            <div id="journal-container" class="journal-container">
+                                <!-- Journal content will be dynamically inserted here -->
+                            </div>
+                            <div id="metrics-container" class="metrics-container hidden">
+                                <!-- Metrics content will be dynamically inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
                 
                 <!-- Settings View -->
-                <div id="settings-view" class="settings-container-revert" style="display: none;">
+                <section id="settings-view" class="content-section" style="display: none;">
                     <div class="projects-header">Settings</div>
                     
                     <div class="settings-section">
@@ -119,13 +159,13 @@
                             <p>Claude Chat v2.0.0</p>
                             <p>A sleek interface for Claude 3.7 Sonnet, Anthropic's most advanced AI assistant. Featuring natural conversations, file uploads, and intelligent responses.</p>
                             <p class="mt-2">Powered by Anthropic's Claude 3.7 Sonnet</p>
-                            <p class="mt-2">© 2025 Claude Chat</p>
+                            <p class="mt-2">© 2025 NeonChat</p>
                         </div>
                     </div>
-                </div>
+                </section>
                 
                 <!-- Projects View -->
-                <div id="projects-view" class="projects-container-revert" style="display: none;">
+                <section id="projects-view" class="content-section" style="display: none;">
                     <div class="projects-header">Projects</div>
                     <div class="mb-4">
                         <button id="create-project-btn" class="tron-button">Create New Project</button>
@@ -136,7 +176,7 @@
                             <p class="text-gray-500">No projects yet. Create your first project to get started!</p>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </main>
         
@@ -178,5 +218,10 @@
             </div>
         </div>
     </div>
+    
+    <!-- Load journal and metrics modules -->
+    <script src="./js/journal-api.js"></script>
+    <script src="./js/journal-ui.js"></script>
+    <script src="./js/metrics-ui.js"></script>
 </body>
 </html>

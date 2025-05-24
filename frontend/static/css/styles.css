@@ -8,6 +8,7 @@
   --tron-white: #f8f8ff; --tron-grid: rgba(0, 240, 255, 0.1);
   --readable-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   --code-font: 'Courier New', Courier, monospace;
+  --sidebar-width: 25%;
 }
 
 /* Base Styles */
@@ -17,6 +18,7 @@ body {
   color: var(--tron-white); position: relative; overflow: hidden;
   margin: 0; padding: 0; /* Remove default margins and padding */
   height: 100vh; /* Set body to full viewport height */
+  overflow: hidden; /* Prevent body scroll */
 }
 body::before { /* Grid */
   content: ''; position: fixed; inset: 0;
@@ -29,6 +31,29 @@ body::before { /* Grid */
 ::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 4px; box-shadow: 0 0 5px var(--neon-blue); }
 ::-webkit-scrollbar-thumb:hover { background: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
+
+/* Common Fixed Container with Internal Scrolling */
+.fixed-scroll-container {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--dark-bg);
+  z-index: 1;
+}
+
+.fixed-scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding: 2rem;
+}
 
 /* Sidebar - Static, always visible */
 .sidebar {
@@ -45,10 +70,52 @@ body::before { /* Grid */
   overflow-y: auto;
 }
 
-/* Toggle functionality removed - sidebar is now static */
 
 /* Sidebar Components */
 .sidebar-header { margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--neon-blue); }
+
+/* Auth Status Styles */
+#auth-status {
+    padding: 1rem 0;
+    border-top: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+#sign-in-container {
+    text-align: center;
+}
+
+#user-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#user-info-container .flex {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue);
+}
+
+#user-name {
+    color: var(--tron-white);
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+.hidden {
+    display: none !important;
+}
 .navigation h2 { margin-bottom: 1rem; color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); font-size: 1.1em; }
 .nav-link {
   display: flex; align-items: center; width: 100%; background-color: transparent !important;
@@ -62,24 +129,33 @@ body::before { /* Grid */
 
 /* Main Content Area - Always offset by sidebar width */
 .main-content-revert {
-  margin-left: 256px; /* Always pushed by sidebar */
-  padding: 1rem; 
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  padding: 0; 
   box-sizing: border-box; 
-  height: 100vh; 
-  overflow-y: hidden;
+  overflow: hidden;
   display: flex; 
   flex-direction: column;
-  width: calc(100% - 256px); /* Full width minus sidebar */
 }
 
 /* Container for view content */
 .view-container-revert {
-    width: 100%; max-width: 1200px; margin-left: auto; margin-right: auto;
+    width: 100%;
     display: flex; flex-direction: column; height: 100%; /* Fill parent height exactly */
     overflow: hidden; /* Prevent scrolling at this level */
+    position: relative;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 /* Chat View Specific Layout */
+#chat-view {
+    padding: 0; /* Let the content handle its own padding */
+}
+
 .chat-view-wrapper-revert { 
     display: flex; flex-direction: column; flex-grow: 1; 
     height: 100%; /* Fill parent height */
@@ -102,7 +178,7 @@ body::before { /* Grid */
 }
 
 /* Individual Message Styling */
-.message { padding: 1rem; margin-bottom: 1rem; border-radius: 8px; position: relative; max-width: 85%; word-wrap: break-word; color: #333 !important; font-family: inherit; }
+.message { padding: 1rem; margin-bottom: 1rem; border-radius: 8px; position: relative; max-width: 100%; word-wrap: break-word; color: #333 !important; font-family: inherit; }
 .message-user { background-color: rgba(0, 240, 255, 0.08); border-left: 3px solid var(--neon-blue); margin-left: auto; margin-right: 0; }
 .message-ai { background-color: rgba(248, 248, 255, 0.95); border-left: 3px solid var(--neon-pink); margin-right: auto; margin-left: 0; }
 .message-system { font-style: italic; color: #666; font-size: 0.9em; max-width: 100%; text-align: center; margin-bottom: 1rem; background-color: transparent; border-left: none; padding: 0.5rem; }
@@ -192,7 +268,78 @@ input[type="file"] { display: none; }
     gap: 1rem;
 }
 
+/* Content Section Base Styles */
+.content-section {
+    display: none;
+    width: 80%;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden; /* Prevent scrolling at section level */
+    position: relative; /* Ensure proper positioning context */
+}
+
+.content-section.active {
+    display: flex;
+}
+
+/* Journal View Styles */
+.journal-view-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.journal-tabs {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: transparent; /* Transparent background */
+    border-bottom: 1px solid var(--neon-blue);
+    flex-shrink: 0; /* Prevent tabs from shrinking */
+}
+
+.journal-tab {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--darker-bg); /* Black background for tabs */
+    color: var(--tron-white);
+    border: 1px solid var(--neon-blue);
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.journal-tab:hover {
+    background-color: rgba(0, 240, 255, 0.1);
+}
+
+.journal-tab.active {
+    background-color: rgba(0, 240, 255, 0.1); /* Very subtle neon blue background */
+    border-bottom-color: rgba(0, 240, 255, 0.1);
+    color: var(--neon-blue);
+    box-shadow: 0 -2px 10px rgba(0, 240, 255, 0.3);
+    border-color: var(--neon-blue); /* Brighter border for active state */
+}
+
+.journal-content-area {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0; /* Important for Firefox flex sizing */
+    position: relative; /* Establish positioning context for absolute children */
+}
+
 /* Settings View Styles */
+#settings-view {
+    padding: 2rem;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
 .settings-section {
     margin-bottom: 2rem;
     background-color: rgba(5, 5, 8, 0.85);
@@ -475,6 +622,39 @@ input[type="file"] { display: none; }
   box-shadow: 0 0 10px var(--neon-pink);
 }
 
+/* Utility Classes */
+.w-full {
+    width: 100%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.space-x-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.flex {
+    display: flex;
+}
+
 
 /* Other utility styles if any */
 .neon-text { text-shadow: 0 0 5px var(--neon-blue); }
@@ -598,9 +778,4 @@ input:checked + .toggle-slider:before {
   #chat-messages { padding: 0.75rem; }
   .chat-hud-revert { padding-top: 0.25rem; }
   .message { max-width: 95%; }
-}
-
-/* Sidebar collapsed state */
-.sidebar.collapsed ~ .main-content-revert {
-  width: 100%; /* Full width when sidebar is collapsed */
 }

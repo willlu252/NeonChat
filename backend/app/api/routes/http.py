@@ -3,9 +3,17 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse, JSONResponse
 import os
 from typing import Dict, Any
+from .auth import router as auth_router
+from .journal import router as journal_router
+from .metrics import router as metrics_router
 
 # Create the router
 router = APIRouter()
+
+# Include sub-routers
+router.include_router(auth_router)
+router.include_router(journal_router)
+router.include_router(metrics_router)
 
 # Get application paths
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))

@@ -1,0 +1,127 @@
+NeonChat Journal & Project System: Component Architecture Overview
+This document outlines the primary technology components and their interactions for the NeonChat application, which is being evolved into a comprehensive AI-powered journaling and project management system.
+Core Philosophy
+The system prioritises leveraging Obsidian as the central, user-controlled datastore for textual and structured data, enhanced by AI capabilities from Anthropic Claude. Firebase provides the necessary cloud infrastructure for hosting, storage of binary files, and authentication. The FastAPI backend acts as the orchestrator, connecting all pieces.
+Main Components & Interactions
+1. Frontend Application (Vite + Vanilla JavaScript)
+Role: The primary user interface for all application features.
+Key Features Handled:
+User authentication (initiating Google Sign-In via Firebase).
+Journaling Interface:
+Structured form for inputting metrics (mood, health, etc.).
+Interactive chat pane for AI-assisted journal entry creation.
+Display of past journal entries, metrics, and AI insights.
+Project Workspace Interface:
+Creation and management of distinct project spaces.
+File uploads (to Firebase Storage) and management within projects.
+Chat interface contextualised by the selected project's knowledge base and system prompts.
+General Chat Interface: Standard LLM chat functionality.
+Settings management (e.g., toggling MCP tools).
+Interactions:
+Communicates with the FastAPI Backend via secure HTTP requests (for most actions) and WebSockets (for real-time chat interactions).
+Handles client-side Firebase Authentication flow.
+May directly upload files (images, project documents) to Firebase Storage after obtaining signed URLs from the backend, or proxy uploads through the backend.
+2. Backend Application (Python FastAPI on Google Cloud Run)
+Role: The central processing unit and API layer of the application. It orchestrates all backend logic and external service integrations.
+Key Responsibilities:
+Receives and processes all requests from the Frontend.
+Authenticates users by verifying Firebase ID tokens.
+Manages and routes data between the Frontend, Obsidian, Claude API, and Firebase Storage.
+Core Services within Backend:
+Obsidian Service:
+Interfaces with the Obsidian Instance via its Local REST API plugin.
+Handles CRUD (Create, Read, Update, Delete) operations for Markdown files within the Obsidian vault (journal entries, chat memories, project configurations).
+Responsible for structuring notes with appropriate frontmatter and using Obsidian's [[wikilink]] syntax for inter-note connections, often guided by instructions from the Claude API.
+May read/write .base files (YAML) if programmatic management of Obsidian Bases views is implemented.
+Anthropic Service:
+Manages all interactions with the Anthropic Claude API.
+Constructs detailed prompts for various AI tasks:
+Interactive and reflective journaling.
+Automated tagging of content.
+Generating AI therapist-style observations.
+Structuring chat memory and project notes for optimal retrieval within Obsidian.
+Summarising documents for project knowledge bases.
+Handles Model Context Protocol (MCP) tool integration, acting as a conduit for Claude to use external tools like n8n.
+Firebase Service:
+Interacts with Firebase Storage for managing file uploads (e.g., generating signed URLs for the frontend, storing files proxied through the backend) and retrieving URLs for stored assets.
+Verifies Firebase Authentication ID tokens.
+Journaling Service: Contains specific business logic for the journaling module, such as calculating well-being scores from user metrics.
+Project Service: Manages the logic for project workspaces, including file associations, system prompt management, and context preparation for project-specific chats.
+Interactions:
+Serves API endpoints for the Frontend.
+Makes calls to the Obsidian Local REST API.
+Makes calls to the Anthropic Claude API.
+Interacts with Firebase Authentication (token verification) and Firebase Storage.
+3. Obsidian Instance (Docker on Google Cloud Run)
+Role: The primary, user-owned datastore for all textual content, structured data within notes, and application configurations that are best kept as Markdown.
+Key Characteristics:
+Accessed programmatically by the FastAPI Backend via the Obsidian Local REST API plugin. This plugin must be installed and configured within the Dockerized Obsidian instance.
+Stores data as plain Markdown files (.md) with YAML frontmatter.
+Content Stored:
+Journal Entries: In a predefined, hardcoded folder structure (e.g., Vault/Journal/YYYY/MM/DD-entry-title.md). Frontmatter will contain structured metrics (mood, health scores, etc.), tags, and links (URLs) to any associated images stored in Firebase Storage. The body will contain the user's free-form text and the AI interaction transcript.
+General Chat Memory & Project Chat Memory: Stored as Markdown files. The structure (folders, filenames, linking) will be dynamically determined by the FastAPI Backend (often guided by the Claude API) to optimise for discoverability and contextual retrieval. Heavily utilises [[wikilinks]] for creating a connected knowledge graph.
+Project Configurations: Details about project workspaces, associated files, and system prompts might be stored as dedicated Markdown notes or within a project's main note.
+Obsidian Bases Plugin Integration:
+This core Obsidian plugin allows users to create database-like views from their notes based on frontmatter properties and filters.
+"Bases" are defined in .base files (YAML format) within the vault.
+The FastAPI Backend can read and write these .base files via the Local REST API to programmatically define or update these database views if required.
+Primarily, "Bases" will be a user-facing feature within their Obsidian app to query and view the data created by NeonChat. The backend ensures data is stored in a "Bases-friendly" way (i.e., consistent frontmatter).
+Interactions:
+Receives API calls from the FastAPI Backend (via the Local REST API plugin) for all data operations.
+4. Anthropic Claude API (Claude 3.7 Sonnet or newer)
+Role: The advanced AI engine providing intelligence for the application.
+Key Functions:
+Interactive Journaling: Engaging with the user in a conversational manner to elicit deeper reflections for journal entries.
+Content Analysis & Enrichment: Identifying key themes, extracting entities, generating relevant tags (e.g., people, places, topics), and creating [[wikilinks]].
+Insight Generation: Providing "AI therapist" style observations and summaries based on journal content.
+Natural Language Understanding & Generation: Powering all chat functionalities (general, project-specific, journaling).
+Tool Use (via MCP): Executing external tools (like n8n workflows) when directed by the backend to perform specialised tasks.
+Interactions:
+Receives API requests (prompts, message history, tool configurations) from the FastAPI Backend.
+Returns generated text, analysis, or tool invocation requests to the FastAPI Backend.
+5. Google Cloud Platform (GCP) / Firebase
+Role: Provides the scalable cloud infrastructure and supporting services.
+Services Used:
+Firebase Hosting: Deploys and serves the static assets of the Frontend Application.
+Google Cloud Run:
+Hosts the containerised FastAPI Backend application.
+Hosts the containerised Obsidian Instance.
+Firebase Storage: Securely stores binary files:
+Images uploaded alongside journal entries.
+Documents and other files uploaded to Project Workspaces.
+(Note: Only the URLs to these files are stored in Obsidian notes, not the files themselves).
+Firebase Authentication:
+Manages user identity using Google Sign-In (or other configured providers).
+Provides ID tokens to the Frontend, which are then verified by the FastAPI Backend to secure API endpoints.
+Interactions:
+Frontend interacts with Firebase Hosting (implicitly by being served) and Firebase Authentication (for sign-in).
+FastAPI Backend is hosted on Cloud Run, interacts with Firebase Authentication (token verification), and Firebase Storage (managing file access/URLs).
+Obsidian Instance is hosted on Cloud Run.
+6. n8n (Optional Workflow Automation)
+Role: Enables the creation of complex, automated workflows that can be triggered as tools by the Claude API (via MCP).
+Deployment: Can be self-hosted (e.g., on Google Cloud Run) or use n8n's cloud offering.
+Key Functions:
+Perform tasks that are too complex or outside the scope of the main FastAPI Backend (e.g., advanced data transformations, integrations with other third-party APIs not directly handled by the backend).
+Exposes workflows as MCP-compliant HTTP endpoints.
+Interactions:
+Receives tool calls (HTTP requests) from the Claude API (proxied/configured by the FastAPI Backend).
+Returns results back to Claude/FastAPI.
+Data Flow Summary (Example: Creating a Journal Entry)
+User (Frontend): Fills out journal metrics form, types initial thoughts, and attaches an image.
+Frontend:
+Authenticates user via Firebase.
+Uploads image to Firebase Storage (gets URL).
+Sends metrics, text, and image URL to FastAPI Backend.
+FastAPI Backend:
+Verifies user's Firebase ID token.
+Sends initial text & context to Claude API for interactive journaling.
+Claude API (via Backend): Engages user, asking questions. Transcript is built.
+User (Frontend): Responds to Claude's questions.
+FastAPI Backend: Once interaction is complete, sends full context to Claude API for final processing (tagging, observations, wikilink suggestions).
+Claude API: Returns structured suggestions.
+FastAPI Backend:
+Calculates well-being score.
+Formats the complete journal entry (metrics, transcript, AI insights, image URL, wikilinks) as Markdown with YAML frontmatter.
+Calls the Obsidian Local REST API to save the .md file to the user's vault in the predefined journal structure.
+Obsidian Instance: Stores the new Markdown file. If "Bases" is configured for journals, it will pick up this new note.
+This component-based architecture aims for modularity, scalability, and clear separation of concerns, allowing for easier development, maintenance, and future expansion.
